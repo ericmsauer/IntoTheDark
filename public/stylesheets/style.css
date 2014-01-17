@@ -1,0 +1,16 @@
+body {
+	background: rgb(192,192,192);
+	margin: 0;
+	padding: 0;
+	text-align: center;
+}
+h1 {
+	font-weight: 400;
+	height: 5%;
+}
+#canvas {
+	height: 480px;
+	margin: 0 auto;
+	text-align: left;
+	width: 640px;
+}
