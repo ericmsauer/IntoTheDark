@@ -12,22 +12,31 @@ window.onload = function () {
 //GAME
 function Game(){
 	this.player = new Player();
+	this.active_units = new Array();
 	this.score = 0;
 		
 	this.drawCanvas = function(){
 		paper.clear();
 		paper.rect(0, 0, 640, 480, 10).attr({fill: "#fff", stroke: "none"});
 		paper.text(40,10,"Score " + this.score);
-		paper.ellipse(this.player.positionX,this.player.positionY,10,10);
+		this.player.draw();	
+		for(var i=1; i<this.active_units.length; i++){
+			this.active_units[i].draw();
+		}
 	}
 
 	this.update = function(){
 		this.player.update();
+		for(var i=1; i<this.active_units.length; i++){
+			this.active_units[i].update();
+		}
 		this.drawCanvas();
 	}
 
 	this.init = function(){
 		this.drawCanvas();
+		unit = new unit_1();
+		active_units[1] = unit;
 		setInterval(function() {
 			game.update();
 			}, 35);
@@ -35,6 +44,18 @@ function Game(){
 }
 
 //UNITS
+function unit_1(){
+	this.positionX = 100;
+	this.positionY = 100;
+
+	this.update = function(){
+		this.positionX += 1;
+	}
+
+	this.draw = function(){
+		paper.ellipse(this.positionX,this.positionY,10,10);
+	}
+}
 
 //PLAYER
 function Player(){
@@ -71,6 +92,10 @@ function Player(){
 		} else if(this.positionY < 0) {
 			this.positionY = 0;
 		}
+	}
+
+	this.draw = function(){
+		paper.ellipse(this.positionX,this.positionY,10,10);
 	}
 }
 
