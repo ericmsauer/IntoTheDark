@@ -36,7 +36,7 @@ function Game(){
 	this.init = function(){
 		this.drawCanvas();
 		unit = new unit_1();
-		active_units[1] = unit;
+		this.active_units[1] = unit;
 		setInterval(function() {
 			game.update();
 			}, 35);
@@ -45,11 +45,25 @@ function Game(){
 
 //UNITS
 function unit_1(){
-	this.positionX = 100;
-	this.positionY = 100;
+	this.positionX = 300;
+	this.positionY = 300;
+	this.collisionType = 'circle';
+	this.radius = 10;
+	this.direction = 3;
 
 	this.update = function(){
-		this.positionX += 1;
+		if(this.positionX == 200){
+			this.direction=0;
+		}	
+		else if(this.positionX == 100){
+			this.direction=1;
+		}
+		if(this.direction==1){
+			this.positionX += 1;
+		}
+		else if(this.direction==0){
+			this.positionX -= 1;
+		}
 	}
 
 	this.draw = function(){
@@ -59,28 +73,74 @@ function unit_1(){
 
 //PLAYER
 function Player(){
+	//Position
 	this.positionX = 100;
 	this.positionY = 100;
+	this.radius = 10;
+	//Collision helpers
+	this.north = false;
+	this.south = false;
+	this.west = false;
+	this.east = false;
+	this.distanceX = 0;
+	this.distanceY = 0;
 
+	this.collision = function(unit){
+		if(unit.collisionType == 'circle'){
+			var distance = Math.sqrt(Math.pow((unit.positionX-this.positionX),2)+Math.pow((unit.positionY-this.positionY),2))<(unit.radius+this.radius);
+			if(distance){
+				return true;
+			}
+			else{
+				return false;
+			}
+		}
+	}
 	this.update = function(){
 		if (key[0]) { //left
 			this.positionX -= 3;
+			this.west = true;
+			this.distanceX = 3;
 			game.score += 3;
 		}
 		if (key[1]) { //right
 			this.positionX += 3;
+			this.east = true;
+			this.distanceX = 3;
 			game.score += 3;
 		}
 		if (key[2]) { //up
 			this.positionY -= 3;
+			this.north = true;
+			this.distanceY = 3;
 			game.score += 3;
 		}
 		if (key[3]) { //down
 			this.positionY += 3;
+			this.south = true;
+			this.distanceY = 3;
 			game.score += 3;
 		}
 		if (key[4]) { //space
 			
+		}
+	
+		for(var i=1; i<game.active_units.length; i++){
+			unit = game.active_units[i];
+			if(this.collision(unit)){
+				if(this.west){
+					this.positionX += this.distanceX;
+				}
+				if(this.east){
+					this.positionX -= this.distanceX;
+				}
+				if(this.north){
+					this.positionY += this.distanceY;
+				}
+				if(this.south){
+					this.positionY -= this.distanceY;
+				}
+			}
 		}
 
 		if(this.positionX > 640) {
@@ -92,6 +152,13 @@ function Player(){
 		} else if(this.positionY < 0) {
 			this.positionY = 0;
 		}
+		//Reset
+		this.north = false;
+		this.south = false;
+		this.east = false;
+		this.west = false;
+		this.distanceX = 0;
+		this.distanceY = 0;
 	}
 
 	this.draw = function(){
