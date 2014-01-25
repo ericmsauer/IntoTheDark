@@ -19,7 +19,7 @@ function Game(){
 	this.drawCanvas = function(){
 		paper.clear();
 		paper.rect(0, 0, 640, 480, 10).attr({fill: "#fff", stroke: "none"});
-		paper.text(40,10,"Score " + this.score);
+		paper.text(60,10,"Score: " + this.score + " Health: " + this.player.health);
 		this.player.draw();	
 		for(var i=1; i<this.active_units.length; i++){
 			this.active_units[i].draw();
@@ -108,7 +108,7 @@ function unit_1(start_x, start_y, start_rand){
 	}
 
 	this.draw = function(){
-		paper.ellipse(this.positionX,this.positionY,10,10);
+		paper.ellipse(this.positionX,this.positionY,10,10).attr({fill: "#0A0"});
 	}
 }
 
@@ -118,6 +118,7 @@ function Player(){
 	this.positionX = 100;
 	this.positionY = 100;
 	this.radius = 10;
+	this.health = 100;
 	//Collision helpers
 	this.north = false;
 	this.south = false;
@@ -130,6 +131,7 @@ function Player(){
 		if(unit.collisionType == 'circle'){
 			var distance = Math.sqrt(Math.pow((unit.positionX-this.positionX),2)+Math.pow((unit.positionY-this.positionY),2))<(unit.radius+this.radius);
 			if(distance){
+				this.health -= 1;
 				return true;
 			}
 			else{
@@ -204,7 +206,7 @@ function Player(){
 	}
 
 	this.draw = function(){
-		paper.ellipse(this.positionX,this.positionY,10,10);
+		paper.ellipse(this.positionX,this.positionY,10,10).attr({fill: "#A00"});
 	}
 }
 
