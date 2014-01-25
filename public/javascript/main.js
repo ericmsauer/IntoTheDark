@@ -14,6 +14,7 @@ function Game(){
 	this.player = new Player();
 	this.active_units = new Array();
 	this.score = 0;
+	this.update_counter = 0;
 		
 	this.drawCanvas = function(){
 		paper.clear();
@@ -26,8 +27,18 @@ function Game(){
 	}
 
 	this.update = function(){
+	
+		if(this.update_counter < 100) {
+			this.update_counter += 1;
+		} else {
+			this.update_counter = 0;
+		}
+		
 		this.player.update();
 		for(var i=1; i<this.active_units.length; i++){
+			if (this.update_counter == 99) {
+				this.active_units[i].newrand();
+			}
 			this.active_units[i].update();
 		}
 		this.drawCanvas();
@@ -35,8 +46,10 @@ function Game(){
 
 	this.init = function(){
 		this.drawCanvas();
-		unit = new unit_1();
-		this.active_units[1] = unit;
+		unit1 = new unit_1(300,300, Math.random());
+		unit2 = new unit_1(500,200, Math.random());
+		this.active_units[1] = unit1;
+		this.active_units[2] = unit2;
 		setInterval(function() {
 			game.update();
 			}, 35);
@@ -44,13 +57,18 @@ function Game(){
 }
 
 //UNITS
-function unit_1(){
-	this.positionX = 300;
-	this.positionY = 300;
+function unit_1(start_x, start_y, start_rand){
+	this.positionX = start_x;
+	this.positionY = start_y;
 	this.collisionType = 'circle';
 	this.radius = 10;
 	this.direction = 3;
+	this.rand = start_rand;
 
+	this.newrand = function() {
+		this.rand = Math.random();
+	}
+	
 	this.update = function(){
 		if(this.positionX == 200){
 			this.direction=0;
@@ -63,6 +81,29 @@ function unit_1(){
 		}
 		else if(this.direction==0){
 			this.positionX -= 1;
+		}
+		//^^^^^^ dunno what this does
+		
+		//Random walk
+		if(this.rand < 0.25) {
+			this.positionX += 1;
+		} else if (this.rand >= 0.25 && this.rand < 0.5) {
+			this.positionX -= 1;
+		} else if (this.rand >= 0.5 && this.rand < 0.75) {
+			this.positionY += 1;
+		} else if (this.rand >= 0.75) {
+			this.positionY -= 1;
+		}
+		
+		//Boundaries
+		if(this.positionX > 640) {
+			this.positionX = 640;
+		} else if(this.positionX < 0) {
+			this.positionX = 0;
+		} else if(this.positionY > 480) {
+			this.positionY = 480;
+		} else if(this.positionY < 0) {
+			this.positionY = 0;
 		}
 	}
 
@@ -143,6 +184,7 @@ function Player(){
 			}
 		}
 
+		//Boundaries
 		if(this.positionX > 640) {
 			this.positionX = 640;
 		} else if(this.positionX < 0) {
