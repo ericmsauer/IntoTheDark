@@ -24,6 +24,11 @@ function Game(){
 		for(var i=1; i<this.active_units.length; i++){
 			this.active_units[i].draw();
 		}
+		
+		//Death
+		if(this.player.dead == true) {
+			paper.text(320,240,"GAME OVER").attr({fill: "#A00"});
+		}
 	}
 
 	this.update = function(){
@@ -119,6 +124,7 @@ function Player(){
 	this.positionY = 100;
 	this.radius = 10;
 	this.health = 100;
+	this.dead = false;
 	//Collision helpers
 	this.north = false;
 	this.south = false;
@@ -140,6 +146,12 @@ function Player(){
 		}
 	}
 	this.update = function(){
+	
+		//Death
+		if(this.health <= 0) {
+			this.dead = true; 
+		}
+		
 		if (key[0]) { //left
 			this.positionX -= 3;
 			this.west = true;
