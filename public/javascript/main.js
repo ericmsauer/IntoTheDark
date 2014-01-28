@@ -129,7 +129,7 @@ function unit_1(start_x, start_y, start_rand){
 		} else if (this.rand >= 0.75) {
 			this.positionY += 1;
 			this.south = true;
-			this.distancet = 1;
+			this.distanceY = 1;
 		}
 	
 		//Collision Reset	
