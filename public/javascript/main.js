@@ -53,7 +53,9 @@ function Game(){
 		}
 		//If the player is dead
 		if(this.player.dead == true) {
+			this.hide_game();
 			paper.text(320,240,"GAME OVER").attr({fill: "#A00"});
+			clearInterval(this.game_interval);
 		}
 	}
 
@@ -83,10 +85,6 @@ function Game(){
 	//---------------------------------------Update Functions--------------------------
 	//Update all objects in the game
 	this.update_game = function(){	
-		//If the player is dead
-		if(this.player.dead == true) {
-			paper.text(320,240,"GAME OVER").attr({fill: "#A00"});
-		}
 		//Update counter
 		if(this.update_counter < 100) {
 			this.update_counter += 1;
@@ -322,6 +320,7 @@ function Player(){
 		for(var i=1; i<game.collision_units.length; i++){
 			unit = game.collision_units[i];
 			if(game.collision(this,unit)){
+				this.health -= 1;
 				this.reset_position();
 			}
 		}	
