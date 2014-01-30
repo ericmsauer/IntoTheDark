@@ -11,8 +11,11 @@ window.onload = function () {
 
 //GAME
 function Game(){
+	//Canvas elements
+	this.game_background;
+	this.mainmenu_start_button;
+	this.game_UI;
 	//Other
-	this.mainmenu_interval;
 	this.game_interval;
 	//Game related variables
 	this.player;
@@ -20,15 +23,13 @@ function Game(){
 	this.score = 0;
 	this.update_counter = 0; //Update counter for random unit movement
 
+	//---------------------------------------Draw Functions--------------------------
 	//This function draws the game
-	this.draw_game = function(){
-		paper.clear(); //Clear the canvas
-		paper.rect(0, 0, 640, 480, 10).attr({fill: "#fff", stroke: "none"}); //Create game box view
-		paper.text(60,10,"Score: " + this.score + " Health: " + this.player.health); //Draw UI
-		this.player.draw(); //Draw the player
+	this.draw_updated_game = function(){
+		this.player.canvas_element.attr({cx: this.player.positionX,cy: this.player.positionY});
 		//Draw the units #TODO Seperate into different array?
 		for(var i=1; i<this.collision_units.length; i++){
-			this.collision_units[i].draw();
+			this.collision_units[i].canvas_element.attr({cx: this.collision_units[i].positionX,cy: this.collision_units[i].positionY});
 		}
 		//If the player is dead
 		if(this.player.dead == true) {
@@ -37,12 +38,18 @@ function Game(){
 	}
 
 	this.draw_mainmenu = function(){
-		paper.clear();
-		paper.rect(0, 0, 640, 480, 10).attr({fill: "#fff", stroke: "none"}); //Create game box view
+		this.mainmenu_start_button = paper.rect(200,100,100,100).attr({fill: "#f0f"});
+		this.mainmenu_start_button.node.onclick = function(){game.start_game();}
 	}
 
+	//---------------------------------------Update Functions--------------------------
 	//Update all objects in the game
 	this.update_game = function(){	
+		//If the player is dead
+		if(this.player.dead == true) {
+			paper.text(320,240,"GAME OVER").attr({fill: "#A00"});
+		}
+		//Update counter
 		if(this.update_counter < 100) {
 			this.update_counter += 1;
 		} else {
@@ -56,34 +63,41 @@ function Game(){
 			}
 			this.collision_units[i].update();
 		}
-		this.draw_game();
+		this.draw_updated_game();
 	}
 
-	this.update_mainmenu = function(){
-		if(key[4]){
-			clearInterval(this.mainmenu_interval);
-			this.player = new Player();
-			this.collision_units[0] = this.player;	
-			unit1 = new unit_1(300,300, Math.random());
-			unit2 = new unit_1(500,200, Math.random());
-			this.collision_units[1] = unit1;
-			this.collision_units[2] = unit2;
-			this.game_interval = setInterval(function() {
-				game.update_game();
-				}, 35);
-		}
-		else{
-			this.draw_mainmenu();
+	//---------------------------------------Init Functions--------------------------
+	this.start_game = function(){
+		//Init player and units
+		this.player = new Player();
+		this.collision_units[0] = this.player;	
+		unit1 = new unit_1(300,300, Math.random());
+		unit2 = new unit_1(500,200, Math.random());
+		this.collision_units[1] = unit1;
+		this.collision_units[2] = unit2;
+		//Hide main menu elements
+		this.mainmenu_start_button.hide();
+		//Draw UI
+		game_UI = paper.text(60,10,"Score: " + this.score + " Health: " + this.player.health);
+		//Draw player and units
+		this.player.draw(); //Draw the player
+		//Draw the units #TODO Seperate into different array?
+		for(var i=1; i<this.collision_units.length; i++){
+			this.collision_units[i].draw();
 		}	
-	}
-
-	//Initialize the game
-	this.init = function(){
-		this.mainmenu_interval = setInterval(function() {
-			game.update_mainmenu();
+		//Start update interval
+		this.game_interval = setInterval(function() {
+			game.update_game();
 			}, 35);
 	}	
 
+	//Initialize the game
+	this.init = function(){
+		this.game_background = paper.rect(0, 0, 640, 480, 10).attr({fill: "#fff", stroke: "none"}); //Create game box view
+		this.draw_mainmenu();
+	}	
+
+	//---------------------------------------Game Functions--------------------------
 	//Check collision between two units
 	this.collision = function(unit,target_unit){
 		//Check for out of boundaries
@@ -117,7 +131,7 @@ function Game(){
 	}
 }
 
-//UNITS
+//---------------------------------------UNITS--------------------------
 function unit_1(start_x, start_y, start_rand){
 	//Standard Attributes
 	this.positionX = start_x;
@@ -135,6 +149,8 @@ function unit_1(start_x, start_y, start_rand){
 	this.distanceY = 0;
 	//Random
 	this.rand = start_rand;
+	//Canvas element
+	this.canvas_element;
 
 	this.newrand = function() {
 		this.rand = Math.random();
@@ -188,27 +204,21 @@ function unit_1(start_x, start_y, start_rand){
 		}	
 	}
 
+	//Reset the position of the unit
 	this.reset_position = function(){	
-		if(this.west){
-			this.positionX += this.distanceX;
-		}
-		if(this.east){
-			this.positionX -= this.distanceX;
-		}
-		if(this.north){
-			this.positionY += this.distanceY;
-		}
-		if(this.south){
-			this.positionY -= this.distanceY;
-		}
+		if(this.west){this.positionX += this.distanceX;}
+		if(this.east){this.positionX -= this.distanceX;}
+		if(this.north){this.positionY += this.distanceY;}
+		if(this.south){this.positionY -= this.distanceY;}
 	}
 
+	//Draw the unit
 	this.draw = function(){
-		paper.ellipse(this.positionX,this.positionY,10,10).attr({fill: "#0A0"});
+		this.canvas_element = paper.ellipse(this.positionX,this.positionY,10,10).attr({fill: "#0A0"});
 	}
 }
 
-//PLAYER
+//---------------------------------------UNITS--------------------------
 function Player(){
 	//Standard Attributes
 	this.positionX = 100;
@@ -224,6 +234,8 @@ function Player(){
 	this.east = false;
 	this.distanceX = 0;
 	this.distanceY = 0;
+	//Canvas_element
+	this.canvas_element;
 
 	this.update = function(){
 		//Death
@@ -301,7 +313,7 @@ function Player(){
 
 	//Draw
 	this.draw = function(){
-		paper.ellipse(this.positionX,this.positionY,10,10).attr({fill: "#A00"});
+		this.canvas_element = paper.ellipse(this.positionX,this.positionY,10,10).attr({fill: "#A00"});
 	}
 }
 
