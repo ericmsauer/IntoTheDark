@@ -16,6 +16,8 @@ function Game(){
 	this.mainmenu_start_button;
 	this.mainmenu_title;
 	this.game_UI;
+	this.mainmenu_elements = new Array();
+	this.game_elements = new Array();
 	//Other
 	this.game_interval;
 	//Game related variables
@@ -25,7 +27,23 @@ function Game(){
 	this.update_counter = 0; //Update counter for random unit movement
 
 	//---------------------------------------Draw Functions--------------------------
-	//This function draws the game
+	this.draw_game = function(){
+		//Draw UI
+		this.game_UI = paper.text(60,10,"Score: " + this.score + " Health: " + this.player.health);
+		//Draw player and units
+		this.player.draw(); //Draw the player
+		//Draw the units #TODO Seperate into different array?
+		for(var i=1; i<this.collision_units.length; i++){
+			this.collision_units[i].draw();
+		}
+		//Add elements to game element Array
+		this.game_elements[0] = this.game_UI;
+		this.game_elements[1] = this.player.canvas_element;
+		for(var i=1; i<this.collision_units.length; i++){
+			this.game_elements.push(this.collision_units[i].canvas_element);
+		}
+	}
+	
 	this.draw_updated_game = function(){
 		this.game_UI.attr({text: "Score: " + this.score + " Health: " + this.player.health});	
 		this.player.canvas_element.attr({cx: this.player.positionX,cy: this.player.positionY});
@@ -39,11 +57,29 @@ function Game(){
 		}
 	}
 
+	this.hide_game = function(){
+		for(var i=0; i<this.game_elements.length; i++){
+			this.game_elements[i].hide();
+		}
+		
+	}
+
 	this.draw_mainmenu = function(){
 		this.mainmenu_start_button = paper.rect(200,100,100,100).attr({fill: "#f0f"});
 		this.mainmenu_start_button.node.onclick = function(){game.start_game();}
+		//Add elements to game element Array
+		this.mainmenu_elements[0] = this.mainmenu_start_button;
+	}
+	
+	this.draw_updated_mainmenu = function(){
+
 	}
 
+	this.hide_mainmenu = function(){
+		for(var i=0; i<this.mainmenu_elements.length; i++){
+			this.mainmenu_elements[i].hide();
+		}
+	}
 	//---------------------------------------Update Functions--------------------------
 	//Update all objects in the game
 	this.update_game = function(){	
@@ -78,15 +114,9 @@ function Game(){
 		this.collision_units[1] = unit1;
 		this.collision_units[2] = unit2;
 		//Hide main menu elements
-		this.mainmenu_start_button.hide();
-		//Draw UI
-		this.game_UI = paper.text(60,10,"Score: " + this.score + " Health: " + this.player.health);
-		//Draw player and units
-		this.player.draw(); //Draw the player
-		//Draw the units #TODO Seperate into different array?
-		for(var i=1; i<this.collision_units.length; i++){
-			this.collision_units[i].draw();
-		}	
+		this.hide_mainmenu();
+		//Draw game elements
+		this.draw_game();
 		//Start update interval
 		this.game_interval = setInterval(function() {
 			game.update_game();
@@ -272,7 +302,6 @@ function Player(){
 					game.score += 3;
 				}
 				if (key[4]) { //space
-					
 				}
 				
 				//Check for collision with other units and boundaries	
