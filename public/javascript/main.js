@@ -14,6 +14,7 @@ function Game(){
 	//Canvas elements
 	this.game_background;
 	this.mainmenu_start_button;
+	this.mainmenu_title;
 	this.game_UI;
 	//Other
 	this.game_interval;
@@ -26,6 +27,7 @@ function Game(){
 	//---------------------------------------Draw Functions--------------------------
 	//This function draws the game
 	this.draw_updated_game = function(){
+		this.game_UI.attr({text: "Score: " + this.score + " Health: " + this.player.health});	
 		this.player.canvas_element.attr({cx: this.player.positionX,cy: this.player.positionY});
 		//Draw the units #TODO Seperate into different array?
 		for(var i=1; i<this.collision_units.length; i++){
@@ -78,7 +80,7 @@ function Game(){
 		//Hide main menu elements
 		this.mainmenu_start_button.hide();
 		//Draw UI
-		game_UI = paper.text(60,10,"Score: " + this.score + " Health: " + this.player.health);
+		this.game_UI = paper.text(60,10,"Score: " + this.score + " Health: " + this.player.health);
 		//Draw player and units
 		this.player.draw(); //Draw the player
 		//Draw the units #TODO Seperate into different array?
