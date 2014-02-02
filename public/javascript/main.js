@@ -6,7 +6,6 @@ var key=[0,0,0,0,0]; // left, right, up, down
 window.onload = function () {
 	paper = Raphael("canvas", 640, 480);
 	game = new Game();
-	game.init();
 };
 
 //GAME
@@ -27,7 +26,7 @@ function Game(){
 	this.update_counter = 0; //Update counter for random unit movement
 
 	//---------------------------------------Draw Functions--------------------------
-	this.draw_game = function(){
+	this.draw_init_game = function(){
 		//Draw UI
 		this.game_UI = paper.text(60,10,"Score: " + this.score + " Health: " + this.player.health);
 		//Draw player and units
@@ -54,27 +53,44 @@ function Game(){
 		//If the player is dead
 		if(this.player.dead == true) {
 			this.hide_game();
-			paper.text(320,240,"GAME OVER").attr({fill: "#A00"});
+			gameover = paper.text(320,240,"GAME OVER").attr({fill: "#A00"}).scale(10,10);
 			clearInterval(this.game_interval);
+		}
+	}
+	
+	this.hide_game = function(){
+		for(var i=0; i<this.game_elements.length; i++){
+			this.game_elements[i].show();
 		}
 	}
 
 	this.hide_game = function(){
 		for(var i=0; i<this.game_elements.length; i++){
 			this.game_elements[i].hide();
-		}
-		
+		}	
 	}
 
-	this.draw_mainmenu = function(){
-		this.mainmenu_start_button = paper.rect(200,100,100,100).attr({fill: "#f0f"});
-		this.mainmenu_start_button.node.onclick = function(){game.start_game();}
+	//Main menu draw functions
+	this.draw_init_mainmenu = function(){
+		mainmenu_title = paper.text(320,60,"Game").scale(10,10);
+		mainmenu_start_button = paper.rect(160,140,320,60).attr({fill: "#f0f"});
+		mainmenu_start_button.node.onclick = function(){game.start_game();}
+		mainmenu_start_text = paper.text(320,170,"Start").scale(5,5);
+		mainmenu_start_text.node.onclick = function(){game.start_game();}
 		//Add elements to game element Array
-		this.mainmenu_elements[0] = this.mainmenu_start_button;
+		this.mainmenu_elements[0] = mainmenu_start_button;
+		this.mainmenu_elements[1] = mainmenu_start_text;
+		this.mainmenu_elements[2] = mainmenu_title;
 	}
 	
 	this.draw_updated_mainmenu = function(){
 
+	}
+	
+	this.draw_mainmenu = function(){
+		for(var i=0; i<this.mainmenu_elements.length; i++){
+			this.mainmenu_elements[i].show();
+		}
 	}
 
 	this.hide_mainmenu = function(){
@@ -109,12 +125,16 @@ function Game(){
 		this.collision_units[0] = this.player;	
 		unit1 = new unit_1(300,300, Math.random());
 		unit2 = new unit_1(500,200, Math.random());
+		unit3 = new unit_1(350,250, Math.random());
+		unit4 = new unit_1(550,150, Math.random());
 		this.collision_units[1] = unit1;
 		this.collision_units[2] = unit2;
+		this.collision_units[3] = unit3;
+		this.collision_units[4] = unit4;
 		//Hide main menu elements
 		this.hide_mainmenu();
 		//Draw game elements
-		this.draw_game();
+		this.draw_init_game();
 		//Start update interval
 		this.game_interval = setInterval(function() {
 			game.update_game();
@@ -123,25 +143,15 @@ function Game(){
 
 	//Initialize the game
 	this.init = function(){
-		this.game_background = paper.rect(0, 0, 640, 480, 10).attr({fill: "#fff", stroke: "none"}); //Create game box view
-		this.draw_mainmenu();
+		this.game_background = paper.rect(0, 0, 640, 480, 10).attr({fill: "#ccc", stroke: "none"}); //Create game box view
+		this.draw_init_mainmenu();
 	}	
 
 	//---------------------------------------Game Functions--------------------------
 	//Check collision between two units
-	this.collision = function(unit,target_unit){
-		//Check for out of boundaries
-		if(unit.positionX + unit.radius > 640) {
-			return true;
-		} else if(unit.positionX - unit.radius < 0) {
-			return true;
-		} else if(unit.positionY + unit.radius > 480) {
-			return true;
-		} else if(unit.positionY - unit.radius < 0) {
-			return true;
-		}
+	this.unit_collision = function(unit,target_unit){
 		//Collision between two units
-		else if(unit!=target_unit){
+		if(unit!=target_unit){
 			//If collision is between two circles
 			if(unit.collisionType == 'circle' && target_unit.collisionType == 'circle'){
 				var sq1 = Math.pow((unit.positionX-target_unit.positionX),2);
@@ -159,6 +169,20 @@ function Game(){
 			return false;
 		}
 	}
+	//Check collision with boundaries
+	this.boundary_collision = function(unit){
+		//Check for out of boundaries
+		if(unit.positionX + unit.radius > 640) {
+			return true;
+		} else if(unit.positionX - unit.radius < 0) {
+			return true;
+		} else if(unit.positionY + unit.radius > 480) {
+			return true;
+		} else if(unit.positionY - unit.radius < 0) {
+			return true;
+		}
+	}
+	this.init();
 }
 
 //---------------------------------------UNITS--------------------------
@@ -193,6 +217,7 @@ function unit_1(start_x, start_y, start_rand){
 		}
 		//If the player is dead stop movement
 		if(!this.dead){
+			this.canvas_element.attr({fill: this.health*.99});
 			//Random walk
 			if(this.rand < 0.25) {
 				this.positionX += 1;
@@ -222,15 +247,19 @@ function unit_1(start_x, start_y, start_rand){
 			this.distanceX = 0;
 			this.distanceY = 0;
 		}
+		else if(this.dead){
+		}
 	}
 	
 	//Collision
 	this.check_collision = function(){
 		for(var i=0; i<game.collision_units.length; i++){
 			unit = game.collision_units[i];
-			if(game.collision(this,unit)){
+			if(game.unit_collision(this,unit)){
+				unit.health -= 5;
 				this.reset_position();
 			}
+			if(game.boundary_collision(this)){this.reset_position();}
 		}	
 	}
 
@@ -272,7 +301,7 @@ function Player(){
 		if(this.health <= 0) {
 			this.dead = true; 
 		}
-		//If the player is dead stop movement
+		//Check if player is not dead
 		if(!this.dead){
 				//Movement	
 				if (key[0]) { //left
@@ -319,10 +348,11 @@ function Player(){
 	this.check_collision = function(){
 		for(var i=1; i<game.collision_units.length; i++){
 			unit = game.collision_units[i];
-			if(game.collision(this,unit)){
-				this.health -= 1;
+			if(game.unit_collision(this,unit)){
+				unit.health -= 5;
 				this.reset_position();
 			}
+			if(game.boundary_collision(this)){this.reset_position();}
 		}	
 	}
 
