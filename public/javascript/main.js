@@ -45,10 +45,12 @@ function Game(){
 	
 	this.draw_updated_game = function(){
 		this.game_UI.attr({text: "Score: " + this.score + " Health: " + this.player.health});	
-		this.player.canvas_element.attr({cx: this.player.positionX,cy: this.player.positionY});
+		this.player.canvas_element.attr({x: this.player.positionX,
+		                                 y: this.player.positionY});
 		//Draw the units #TODO Seperate into different array?
 		for(var i=1; i<this.collision_units.length; i++){
-			this.collision_units[i].canvas_element.attr({cx: this.collision_units[i].positionX,cy: this.collision_units[i].positionY});
+			this.collision_units[i].canvas_element.attr({x: this.collision_units[i].positionX,
+			                                             y: this.collision_units[i].positionY});
 		}
 		//If the player is dead
 		if(this.player.dead == true) {
@@ -217,7 +219,7 @@ function unit_1(start_x, start_y, start_rand){
 		}
 		//If the player is dead stop movement
 		if(!this.dead){
-			this.canvas_element.attr({fill: this.health*.99});
+			//this.canvas_element.attr({fill: this.health*.99}); <--no longer works with image
 			//Random walk
 			if(this.rand < 0.25) {
 				this.positionX += 1;
@@ -273,7 +275,8 @@ function unit_1(start_x, start_y, start_rand){
 
 	//Draw the unit
 	this.draw = function(){
-		this.canvas_element = paper.ellipse(this.positionX,this.positionY,10,10).attr({fill: "#0A0"});
+		//this.canvas_element = paper.ellipse(this.positionX,this.positionY,10,10).attr({fill: "#0A0"});
+		this.canvas_element = paper.image("./art/skeleton.png",this.positionX,this.positionY,40,40);
 	}
 }
 
@@ -373,7 +376,8 @@ function Player(){
 
 	//Draw
 	this.draw = function(){
-		this.canvas_element = paper.ellipse(this.positionX,this.positionY,10,10).attr({fill: "#A00"});
+		//this.canvas_element = paper.ellipse(this.positionX,this.positionY,10,10).attr({fill: "#A00"});
+		this.canvas_element = paper.image("./art/Knight.png",this.positionX,this.positionY,40,40);
 	}
 }
 
