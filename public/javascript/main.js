@@ -44,11 +44,13 @@ function Game(){
 	}
 	
 	this.draw_updated_game = function(){
-		this.game_UI.attr({text: "Score: " + this.score + " Health: " + this.player.health});	
-		this.player.canvas_element.attr({cx: this.player.positionX,cy: this.player.positionY});
+		//Draw the UI
+		this.game_UI.attr({text: "Score: " + this.score + " Health: " + this.player.health});
+		//Update Player
+		this.player.draw_update();
 		//Draw the units #TODO Seperate into different array?
 		for(var i=1; i<this.collision_units.length; i++){
-			this.collision_units[i].canvas_element.attr({cx: this.collision_units[i].positionX,cy: this.collision_units[i].positionY});
+			this.collision_units[i].draw_update();
 		}
 		//If the player is dead
 		if(this.player.dead == true) {
@@ -84,7 +86,7 @@ function Game(){
 	}
 	
 	this.draw_updated_mainmenu = function(){
-
+			
 	}
 	
 	this.draw_mainmenu = function(){
@@ -153,10 +155,10 @@ function Game(){
 		//Collision between two units
 		if(unit!=target_unit){
 			//If collision is between two circles
-			if(unit.collisionType == 'circle' && target_unit.collisionType == 'circle'){
+			if(unit.COLLISIONTYPE == 'circle' && target_unit.COLLISIONTYPE == 'circle'){
 				var sq1 = Math.pow((unit.positionX-target_unit.positionX),2);
 				var sq2 = Math.pow((unit.positionY-target_unit.positionY),2);
-				var distance = unit.radius+target_unit.radius;
+				var distance = unit.RADIUS+target_unit.RADIUS;
 				if(Math.sqrt(sq1 + sq2)<distance){
 					return true;
 				}
@@ -169,16 +171,17 @@ function Game(){
 			return false;
 		}
 	}
+
 	//Check collision with boundaries
 	this.boundary_collision = function(unit){
 		//Check for out of boundaries
-		if(unit.positionX + unit.radius > 640) {
+		if(unit.positionX + unit.RADIUS > 640) {
 			return true;
-		} else if(unit.positionX - unit.radius < 0) {
+		} else if(unit.positionX - unit.RADIUS < 0) {
 			return true;
-		} else if(unit.positionY + unit.radius > 480) {
+		} else if(unit.positionY + unit.RADIUS > 480) {
 			return true;
-		} else if(unit.positionY - unit.radius < 0) {
+		} else if(unit.positionY - unit.RADIUS < 0) {
 			return true;
 		}
 	}
@@ -190,11 +193,11 @@ function unit_1(start_x, start_y, start_rand){
 	//Standard Attributes
 	this.positionX = start_x;
 	this.positionY = start_y;
-	this.radius = 10;
-	this.collisionType = 'circle';
+	this.RADIUS = 10;
+	this.COLLISIONTYPE = 'circle';
 	this.health = 100;
 	this.dead = false;
-	//Collision helpers
+	//Movement
 	this.north = false;
 	this.south = false;
 	this.west = false;
@@ -236,7 +239,6 @@ function unit_1(start_x, start_y, start_rand){
 				this.south = true;
 				this.distanceY = 1;
 			}
-
 			this.check_collision();
 
 			//Reset
@@ -275,26 +277,38 @@ function unit_1(start_x, start_y, start_rand){
 	this.draw = function(){
 		this.canvas_element = paper.ellipse(this.positionX,this.positionY,10,10).attr({fill: "#0A0"});
 	}
+	
+	//Update the canvas for this unit
+	this.draw_update = function(){
+		this.canvas_element.attr({cx: this.positionX, cy: this.positionY});
+	}
 }
 
-//---------------------------------------UNITS--------------------------
+//---------------------------------------PLAYER--------------------------
 function Player(){
-	//Standard Attributes
+	// Attributes
 	this.positionX = 100;
 	this.positionY = 100;
-	this.radius = 10;
-	this.collisionType = 'circle';
+	this.RADIUS = 10;
+	this.COLLISIONTYPE = 'circle';
 	this.health = 100;
 	this.dead = false;
-	//Collision helpers
+	//Movement
 	this.north = false;
 	this.south = false;
 	this.west = false;
 	this.east = false;
 	this.distanceX = 0;
 	this.distanceY = 0;
-	//Canvas_element
-	this.canvas_element;
+	this.speedX = 0;
+	this.speedY = 0;
+	this.accelerationX = 0;
+	this.accelerationY = 0;
+	//Canvas_elements
+	this.IMAGE_SRC = "/pictures/player_body.png";
+	this.canvas_element_body;
+	this.canvas_element_sword;
+	this.canvas_element_shield;
 
 	this.update = function(){
 		//Death
@@ -303,44 +317,44 @@ function Player(){
 		}
 		//Check if player is not dead
 		if(!this.dead){
-				//Movement	
-				if (key[0]) { //left
-					this.positionX -= 3;
-					this.west = true;
-					this.distanceX = 3;
-					game.score += 3;
-				}
-				if (key[1]) { //right
-					this.positionX += 3;
-					this.east = true;
-					this.distanceX = 3;
-					game.score += 3;
-				}
-				if (key[2]) { //up
-					this.positionY -= 3;
-					this.north = true;
-					this.distanceY = 3;
-					game.score += 3;
-				}
-				if (key[3]) { //down
-					this.positionY += 3;
-					this.south = true;
-					this.distanceY = 3;
-					game.score += 3;
-				}
-				if (key[4]) { //space
-				}
-				
-				//Check for collision with other units and boundaries	
-				this.check_collision();
+			//Movement	
+			if (key[0]) { //left
+				this.positionX -= 3;
+				this.west = true;
+				this.distanceX = 3;
+				game.score += 3;
+			}
+			if (key[1]) { //right
+				this.positionX += 3;
+				this.east = true;
+				this.distanceX = 3;
+				game.score += 3;
+			}
+			if (key[2]) { //up
+				this.positionY -= 3;
+				this.north = true;
+				this.distanceY = 3;
+				game.score += 3;
+			}
+			if (key[3]) { //down
+				this.positionY += 3;
+				this.south = true;
+				this.distanceY = 3;
+				game.score += 3;
+			}
+			if (key[4]) { //space
+			}
+			
+			//Check for collision with other units and boundaries	
+			this.check_collision();
 
-				//Reset
-				this.north = false;
-				this.south = false;
-				this.east = false;
-				this.west = false;
-				this.distanceX = 0;
-				this.distanceY = 0;
+			//Reset
+			this.north = false;
+			this.south = false;
+			this.east = false;
+			this.west = false;
+			this.distanceX = 0;
+			this.distanceY = 0;
 		}
 	}
 
@@ -373,7 +387,14 @@ function Player(){
 
 	//Draw
 	this.draw = function(){
-		this.canvas_element = paper.ellipse(this.positionX,this.positionY,10,10).attr({fill: "#A00"});
+		this.canvas_element_body = paper.image(this.IMAGE_SRC,this.positionX-this.RADIUS,this.positionY-this.RADIUS,20,20);
+		//this.canvas_element_sword = paper.image("/pictures/axe.png",this.positionX-this.RADIUS,this.positionY-this.RADIUS-5,5,10);
+	}
+
+	//Update the canvas
+	this.draw_update = function(){
+		this.canvas_element_body.attr({x: this.positionX-this.RADIUS, y: this.positionY-this.RADIUS});
+		//this.canvas_element_sword.attr({x: this.positionX-this.RADIUS, y: this.positionY-this.RADIUS-5});
 	}
 }
 
