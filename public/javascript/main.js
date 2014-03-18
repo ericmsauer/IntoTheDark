@@ -33,7 +33,7 @@ function Game(){
 		this.player.draw(); //Draw the player
 		//Draw the units #TODO Seperate into different array?
 		for(var i=1; i<this.collision_units.length; i++){
-			this.collision_units[i].draw();
+			this.collision_units[i].init_draw();
 		}
 		//Add elements to game element Array
 		this.game_elements[0] = this.game_UI;
@@ -208,6 +208,9 @@ function unit_1(start_x, start_y, start_rand){
 	this.rand = start_rand;
 	//Canvas element
 	this.canvas_element;
+	//Animation helpers
+	this.walking = false;
+	this.walkcounter = 0;
 
 	this.newrand = function() {
 		this.rand = Math.random();
@@ -220,22 +223,26 @@ function unit_1(start_x, start_y, start_rand){
 		}
 		//If the player is dead stop movement
 		if(!this.dead){
-			this.canvas_element.attr({fill: this.health*.99});
+			//this.canvas_element.attr({fill: this.health*.99}); <--no longer works with image
 			//Random walk
 			if(this.rand < 0.25) {
 				this.positionX += 1;
+				this.walking = true;
 				this.east = true;
 				this.distanceX = 1;
 			} else if (this.rand >= 0.25 && this.rand < 0.5) {
 				this.positionX -= 1;
+				this.walking = true;
 				this.west = true;
 				this.distanceX = 1;
 			} else if (this.rand >= 0.5 && this.rand < 0.75) {
 				this.positionY -= 1;
+				this.walking = true;
 				this.north = true;
 				this.distanceY = 1;
 			} else if (this.rand >= 0.75) {
 				this.positionY += 1;
+				this.walking = true;
 				this.south = true;
 				this.distanceY = 1;
 			}
@@ -274,8 +281,31 @@ function unit_1(start_x, start_y, start_rand){
 	}
 
 	//Draw the unit
-	this.draw = function(){
-		this.canvas_element = paper.ellipse(this.positionX,this.positionY,10,10).attr({fill: "#0A0"});
+	this.init_draw = function(){
+		this.canvas_element = paper.image("./art/skeleton_stand.png",this.positionX,this.positionY,40,40);
+	}
+	
+	this.update_draw = function() {
+		if(this.walking) {
+			if(this.walkcounter <= 8) {
+				this.canvas_element.attr({x: this.positionX,
+			                              y: this.positionY,
+										  src: "./art/skeleton_walk.png"});
+				this.walkcounter += 1;
+			} else if(this.walkcounter > 8 && this.walkcounter < 16) {
+				this.canvas_element.attr({x: this.positionX,
+			                              y: this.positionY,
+										  src: "./art/skeleton_stand.png"});
+				this.walkcounter += 1;
+			} else {
+				this.walkcounter = 0;
+			}
+			this.walking = false;
+		} else {
+			this.canvas_element.attr({x: this.positionX,
+			                          y: this.positionY,
+								      src: "./art/skeleton_stand.png"});
+		}	
 	}
 	
 	//Update the canvas for this unit
