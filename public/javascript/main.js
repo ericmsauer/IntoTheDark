@@ -12,6 +12,7 @@ window.onload = function () {
 function Game(){
 	//Canvas elements
 	this.game_background;
+	this.game_foreground;
 	this.mainmenu_start_button;
 	this.mainmenu_title;
 	this.game_UI;
@@ -24,6 +25,11 @@ function Game(){
 	this.collision_units = new Array(); //Array of units to be checked for collision
 	this.score = 0;
 	this.update_counter = 0; //Update counter for random unit movement
+	//Mouse Attributes
+	this.mouse_x = 0;
+	this.mouse_y = 0;
+	this.mouse_click = 0;
+
 
 	//---------------------------------------Draw Functions--------------------------
 	this.draw_init_game = function(){
@@ -41,6 +47,7 @@ function Game(){
 		for(var i=1; i<this.collision_units.length; i++){
 			this.game_elements.push(this.collision_units[i].canvas_element);
 		}
+		this.game_foreground.toFront();
 	}
 	
 	this.draw_updated_game = function(){
@@ -58,14 +65,9 @@ function Game(){
 			gameover = paper.text(320,240,"GAME OVER").attr({fill: "#A00"}).scale(10,10);
 			clearInterval(this.game_interval);
 		}
+		this.game_foreground.toFront();
 	}
 	
-	this.hide_game = function(){
-		for(var i=0; i<this.game_elements.length; i++){
-			this.game_elements[i].show();
-		}
-	}
-
 	this.hide_game = function(){
 		for(var i=0; i<this.game_elements.length; i++){
 			this.game_elements[i].hide();
@@ -100,6 +102,7 @@ function Game(){
 			this.mainmenu_elements[i].hide();
 		}
 	}
+
 	//---------------------------------------Update Functions--------------------------
 	//Update all objects in the game
 	this.update_game = function(){	
@@ -146,6 +149,17 @@ function Game(){
 	//Initialize the game
 	this.init = function(){
 		this.game_background = paper.rect(0, 0, 640, 480, 10).attr({fill: "#ccc", stroke: "none"}); //Create game box view
+		this.game_foreground = paper.rect(0, 0, 640, 480, 10).attr({fill: "#fff", opacity: "0"});
+		this.game_foreground.mousemove(function (event){
+			game.mouse_x = event.offsetX;
+			game.mouse_y = event.offsetY;
+		});
+		this.game_foreground.mousedown(function (event){
+			game.mouse_click = 1;
+		});
+		this.game_foreground.mouseup(function (event){
+			game.mouse_click = 0;
+		});
 		this.draw_init_mainmenu();
 	}	
 
@@ -185,6 +199,9 @@ function Game(){
 			return true;
 		}
 	}
+
+
+	
 	this.init();
 }
 
@@ -223,7 +240,6 @@ function unit_1(start_x, start_y, start_rand){
 		}
 		//If the player is dead stop movement
 		if(!this.dead){
-			//this.canvas_element.attr({fill: this.health*.99}); <--no longer works with image
 			//Random walk
 			if(this.rand < 0.25) {
 				this.positionX += 1;
@@ -265,7 +281,7 @@ function unit_1(start_x, start_y, start_rand){
 		for(var i=0; i<game.collision_units.length; i++){
 			unit = game.collision_units[i];
 			if(game.unit_collision(this,unit)){
-				unit.health -= 5;
+				//unit.health -= 5;
 				this.reset_position();
 			}
 			if(game.boundary_collision(this)){this.reset_position();}
@@ -310,7 +326,7 @@ function unit_1(start_x, start_y, start_rand){
 	
 	//Update the canvas for this unit
 	this.draw_update = function(){
-		this.canvas_element.attr({cx: this.positionX, cy: this.positionY});
+		this.canvas_element.attr({x: this.positionX-this.RADIUS, y: this.positionY-this.RADIUS});
 	}
 }
 
@@ -319,10 +335,16 @@ function Player(){
 	// Attributes
 	this.positionX = 100;
 	this.positionY = 100;
+	this.rotation = 0; 
 	this.RADIUS = 10;
 	this.COLLISIONTYPE = 'circle';
 	this.health = 100;
 	this.dead = false;
+	//Equipment
+	this.right_hand = 0;
+	this.right_hand_use = 0;
+	this.left_hand = 0;
+	this.left_hand_use = 0;
 	//Movement
 	this.north = false;
 	this.south = false;
@@ -330,15 +352,13 @@ function Player(){
 	this.east = false;
 	this.distanceX = 0;
 	this.distanceY = 0;
-	this.speedX = 0;
-	this.speedY = 0;
-	this.accelerationX = 0;
-	this.accelerationY = 0;
 	//Canvas_elements
-	this.IMAGE_SRC = "/pictures/player_body.png";
+	this.IMAGE_SRC_BODY = "/pictures/player_body.png";
+	this.IMAGE_SRC_RIGHT_HAND = "/pictures/axe.png";
+	this.IMAGE_SRC_LEFT_HAND = "/pictures/shield.png"; 
 	this.canvas_element_body;
-	this.canvas_element_sword;
-	this.canvas_element_shield;
+	this.canvas_element_right_hand;
+	this.canvas_element_left_hand;
 
 	this.update = function(){
 		//Death
@@ -374,9 +394,21 @@ function Player(){
 			}
 			if (key[4]) { //space
 			}
+			if (key[6])
+				this.left_hand_use = 1;
+			else
+				this.left_hand_use = 0;
+			if(game.mouse_click == 1)
+				this.right_hand_use = 1;
+			else
+				this.right_hand_use = 0;
+				
 			
 			//Check for collision with other units and boundaries	
 			this.check_collision();
+
+			//Determine rotation needed to face the mouse
+			this.rotation = 180*Math.atan2(game.mouse_y - this.positionY, game.mouse_x - this.positionX)/Math.PI + 90;
 
 			//Reset
 			this.north = false;
@@ -396,7 +428,9 @@ function Player(){
 				unit.health -= 5;
 				this.reset_position();
 			}
-			if(game.boundary_collision(this)){this.reset_position();}
+			if(game.boundary_collision(this)){
+				this.reset_position();
+			}
 		}	
 	}
 
@@ -417,14 +451,25 @@ function Player(){
 
 	//Draw
 	this.draw = function(){
-		this.canvas_element_body = paper.image(this.IMAGE_SRC,this.positionX-this.RADIUS,this.positionY-this.RADIUS,20,20);
-		//this.canvas_element_sword = paper.image("/pictures/axe.png",this.positionX-this.RADIUS,this.positionY-this.RADIUS-5,5,10);
+		this.canvas_element_left_hand = paper.image(this.IMAGE_SRC_LEFT_HAND,this.positionX-this.RADIUS-20,this.positionY-this.RADIUS-20,25,5);
+		this.canvas_element_right_hand = paper.image(this.IMAGE_SRC_RIGHT_HAND,this.positionX-this.RADIUS-20,this.positionY-this.RADIUS-20,15,40);
+		this.canvas_element_body = paper.image(this.IMAGE_SRC_BODY,this.positionX-this.RADIUS + 15,this.positionY - this.RADIUS - 20,20,20);
 	}
 
 	//Update the canvas
 	this.draw_update = function(){
 		this.canvas_element_body.attr({x: this.positionX-this.RADIUS, y: this.positionY-this.RADIUS});
-		//this.canvas_element_sword.attr({x: this.positionX-this.RADIUS, y: this.positionY-this.RADIUS-5});
+		this.canvas_element_right_hand.attr({x: this.positionX-this.RADIUS + 17, y: this.positionY - this.RADIUS - 35});
+		this.canvas_element_left_hand.attr({x: this.positionX-this.RADIUS, y: this.positionY - this.RADIUS - 10});
+		this.canvas_element_body.transform("r" + this.rotation);
+		if(this.right_hand_use == 1)
+			this.canvas_element_right_hand.transform("r" + (this.rotation - 20) + "," + this.positionX + "," + this.positionY);
+		else
+			this.canvas_element_right_hand.transform("r" + (this.rotation + 40) + "," + this.positionX + "," + this.positionY);
+		if(this.left_hand_use == 1)
+			this.canvas_element_left_hand.transform("r" + (this.rotation - 20) + "," + this.positionX + "," + this.positionY);
+		else
+			this.canvas_element_left_hand.transform("r" + (this.rotation - 70) + "," + this.positionX + "," + this.positionY);
 	}
 }
 
@@ -436,6 +481,7 @@ function changeKey(which, to){
 		case 83: case 40: key[3]=to; break;// down
 		case 32: key[4]=to; break; // space bar;
 		case 17: key[5]=to; break; // ctrl
+		case 16: key[6]=to; break; //shift
 	}
 }
 document.onkeydown=function(e){changeKey((e||window.event).keyCode, 1);};
