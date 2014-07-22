@@ -8,6 +8,64 @@ window.onload = function () {
 	game = new Game();
 };
 
+// LINE SEGMENTS
+var walls = [
+
+	// Border
+	[
+	{a:{x:0,y:0}, b:{x:640,y:0}},
+	{a:{x:640,y:0}, b:{x:640,y:480}},
+	{a:{x:640,y:480}, b:{x:0,y:480}},
+	{a:{x:0,y:480}, b:{x:0,y:0}}
+	],
+
+	// Polygon #1
+	[
+	{a:{x:100,y:150}, b:{x:120,y:50}},
+	{a:{x:120,y:50}, b:{x:200,y:80}},
+	{a:{x:200,y:80}, b:{x:140,y:210}},
+	{a:{x:140,y:210}, b:{x:100,y:150}}
+	],
+
+	// Polygon #2
+	[
+	{a:{x:100,y:200}, b:{x:120,y:250}},
+	{a:{x:120,y:250}, b:{x:60,y:250}},
+	{a:{x:60,y:250}, b:{x:100,y:200}}
+	],
+
+	// Polygon #3
+	[
+	{a:{x:200,y:260}, b:{x:220,y:150}},
+	{a:{x:220,y:150}, b:{x:300,y:200}},
+	{a:{x:300,y:200}, b:{x:350,y:320}},
+	{a:{x:350,y:320}, b:{x:200,y:260}}
+	],
+
+	// Polygon #4
+	[
+	{a:{x:340,y:60}, b:{x:360,y:40}},
+	{a:{x:360,y:40}, b:{x:370,y:70}},
+	{a:{x:370,y:70}, b:{x:340,y:60}}
+	],
+
+	// Polygon #5
+	[
+	{a:{x:450,y:190}, b:{x:560,y:170}},
+	{a:{x:560,y:170}, b:{x:540,y:270}},
+	{a:{x:540,y:270}, b:{x:430,y:290}},
+	{a:{x:430,y:290}, b:{x:450,y:190}}
+	],
+
+	// Polygon #6
+	[
+	{a:{x:400,y:95}, b:{x:580,y:50}},
+	{a:{x:580,y:50}, b:{x:480,y:150}},
+	{a:{x:480,y:150}, b:{x:400,y:95}}
+	]
+
+];
+
 //GAME
 function Game(){
 	//Canvas elements
@@ -23,7 +81,8 @@ function Game(){
 	//Game related variables
 	this.player;
 	this.collision_units = new Array(); //Array of units to be checked for collision
-	this.update_counter = 0; //Update counter for random unit movement
+	this.collision_walls = new Array();
+	
 	//Mouse Attributes
 	this.mouse_x = 0;
 	this.mouse_y = 0;
@@ -33,6 +92,17 @@ function Game(){
 
 	//---------------------------------------Draw Functions--------------------------
 	this.draw_init_game = function(){
+		//Draw Enviornment
+		for(var x = 0; x < walls.length; x++){
+			var segments = walls[x];
+			var path = "M" + segments[0].a.x + "," + segments[0].a.y;
+			for(var y = 0; y < segments.length; y++){
+				var seg = segments[y];
+				path += "L" + seg.b.x + "," + seg.b.y;
+			}
+			if(x != 0)
+				this.collision_walls[i] = paper.path(path).attr({fill:"grey"});
+		}
 		//Draw UI
 		//this.game_UI = paper.text(60,10,"Score: " + this.score + " Health: " + this.player.health);
 		//Draw player and units
@@ -53,12 +123,12 @@ function Game(){
 	this.draw_updated_game = function(){
 		//Draw the UI
 		//this.game_UI.attr({text: "Score: " + this.score + " Health: " + this.player.health});
-		//Update Player
-		this.player.draw_update();
 		//Draw the units #TODO Seperate into different array?
 		for(var i=1; i<this.collision_units.length; i++){
 			this.collision_units[i].draw_update();
 		}
+		//Update Player
+		this.player.draw_update();
 		//If the player is dead
 		if(this.player.dead == true) {
 			this.hide_game();
@@ -69,15 +139,21 @@ function Game(){
 	}
 	
 	this.draw_game = function(){
-		for(var i=0; i<this.game_elements.length; i++){
-			this.game_elements[i].show();
+		for(var i=0; i<this.collision_units.length; i++){
+			this.collision_units[i].show();
+		}
+		for(var i=0; i<this.collision_walls.length; i++){
+			this.collision_walls[i].show();
 		}
 	}
 	
 	this.hide_game = function(){
-		for(var i=0; i<this.game_elements.length; i++){
-			this.game_elements[i].hide();
-		}	
+		for(var i=0; i<this.collision_units.length; i++){
+			this.collision_units[i].hide();
+		}
+		for(var i=0; i<this.collision_walls.length; i++){
+			this.collision_walls[i].hide();
+		}
 	}
 
 	//Main menu draw functions
@@ -131,9 +207,9 @@ function Game(){
 		//Init player and units
 		this.player = new Player();
 		this.collision_units[0] = this.player;	
-		unit1 = new unit_1(300,300,true,0);
-		unit2 = new unit_1(500,200,true,1);
-		unit3 = new unit_1(350,250,false,0);
+		unit1 = new unit_1(300,400,true,0);
+		unit2 = new unit_1(500,350,true,1);
+		unit3 = new unit_1(400,250,false,0);
 		unit4 = new unit_1(550,150,false,1);
 		this.collision_units[1] = unit1;
 		this.collision_units[2] = unit2;
@@ -151,8 +227,8 @@ function Game(){
 
 	//Initialize the game
 	this.init = function(){
-		this.game_background = paper.rect(0, 0, 640, 480, 10).attr({fill: "#ccc", stroke: "none"}); //Create game box view
-		this.game_foreground = paper.rect(0, 0, 640, 480, 10).attr({fill: "#000", opacity: ".0"});
+		this.game_background = paper.rect(0, 0, 640, 480).attr({fill: "#ccc", stroke: "none"}); //Create game box view
+		this.game_foreground = paper.rect(0, 0, 640, 480).attr({fill: "#000", opacity: ".0"});
 		this.game_foreground.mousemove(function (event){
 			game.mouse_x = event.offsetX;
 			game.mouse_y = event.offsetY;
@@ -218,16 +294,41 @@ function Game(){
 
 	//Check collision with boundaries
 	this.boundary_collision = function(unit){
-		//Check for out of boundaries
-		if(unit.positionX + unit.RADIUS > 640) {
-			return true;
-		} else if(unit.positionX - unit.RADIUS < 0) {
-			return true;
-		} else if(unit.positionY + unit.RADIUS > 480) {
-			return true;
-		} else if(unit.positionY - unit.RADIUS < 0) {
-			return true;
+		for(var x = 0; x < walls.length; x++){
+			var segments = walls[x];
+			for(var y = 0; y < segments.length; y++){
+				var seg_v_x = segments[y].b.x - segments[y].a.x;
+				var seg_v_y = segments[y].b.y - segments[y].a.y;
+				
+				var pt_v_x = unit.positionX - segments[y].a.x;
+				var pt_v_y = unit.positionY - segments[y].a.y;
+
+				var seg_v = Math.sqrt(seg_v_x*seg_v_x + seg_v_y*seg_v_y);
+				var seg_v_unit_x = seg_v_x/seg_v;
+				var seg_v_unit_y = seg_v_y/seg_v;
+
+				var proj = pt_v_x*seg_v_unit_x + pt_v_y*seg_v_unit_y;
+
+				if(proj <= 0){
+					var closest_x = segments[y].a.x;
+					var closest_y = segments[y].a.y;
+				}
+				else if(proj >= seg_v){
+					var closest_x = segments[y].b.x;
+					var closest_y = segments[y].b.y;
+				}
+				else{
+					var closest_x = segments[y].a.x + seg_v_unit_x*proj;
+					var closest_y = segments[y].a.y + seg_v_unit_y*proj;
+				}
+				var dist_v_x = unit.positionX - closest_x;
+				var dist_v_y = unit.positionY - closest_y;
+				if(Math.sqrt(dist_v_x*dist_v_x + dist_v_y*dist_v_y) < unit.RADIUS){
+					return true;
+				}
+			}
 		}
+		return false;
 	}
 	
 	this.init();
@@ -338,9 +439,9 @@ function unit_1(startx, starty, face, block){
 	this.check_collision = function(){
 		for(var i=1; i<game.collision_units.length; i++){
 			unit = game.collision_units[i];
-			if(game.unit_collision(this,unit) || game.boundary_collision(this)){
-				this.reset_position();
-			}
+			//if(game.unit_collision(this,unit) || game.boundary_collision(this)){
+			//	this.reset_position();
+			//}
 		}	
 	}
 
@@ -389,8 +490,8 @@ function unit_1(startx, starty, face, block){
 //---------------------------------------PLAYER--------------------------
 function Player(){
 	// Attributes
-	this.positionX = 100;
-	this.positionY = 100;
+	this.positionX = 50;
+	this.positionY = 50;
 	this.rotation = 0; 
 	this.RADIUS = 10;
 	this.COLLISION_RADIUS = this.RADIUS + 2;
@@ -441,25 +542,21 @@ function Player(){
 				this.positionX -= 3;
 				this.west = true;
 				this.distanceX = 3;
-				game.score += 3;
 			}
 			if (key[1]) { //right
 				this.positionX += 3;
 				this.east = true;
 				this.distanceX = 3;
-				game.score += 3;
 			}
 			if (key[2]) { //up
 				this.positionY -= 3;
 				this.north = true;
 				this.distanceY = 3;
-				game.score += 3;
 			}
 			if (key[3]) { //down
 				this.positionY += 3;
 				this.south = true;
 				this.distanceY = 3;
-				game.score += 3;
 			}
 			if (key[4]) { //space
 			}
@@ -475,7 +572,6 @@ function Player(){
 			}
 			else {
 				this.right_hand_repeat = 0;
-				this.right_hand_hit = 0;
 			}
 			
 			//Determine Right Hand Animation Rate
@@ -484,6 +580,7 @@ function Player(){
 					if(this.right_hand_anim > -30)
 						this.right_hand_anim -= 30;
 					else {
+						this.right_hand_hit = 0;
 						this.right_hand_anim = -30;
 						this.right_hand_use = 0;
 					}
@@ -546,22 +643,65 @@ function Player(){
 		}
 	}
 
+	this.sight_lines = new Array();
+	this.sight_lines_intersect = new Array();
+	this.sight_lines_element = new Array();
+	this.sight_lines_poly = new Array();
+
 	//Draw
 	this.draw = function(){
+		//Hands
 		this.canvas_element_left_hand = paper.image(this.IMAGE_SRC_LEFT_HAND,this.positionX-this.RADIUS-20,this.positionY-this.RADIUS-20,25,5);
 		this.canvas_element_right_hand = paper.image(this.IMAGE_SRC_RIGHT_HAND,this.positionX-this.RADIUS-20,this.positionY-this.RADIUS-20,15,40);
+
+		//Legs
 		this.canvas_element_legs_1 = paper.image(this.IMAGE_SRC_LEGS_1,this.positionX-this.RADIUS,this.positionY-this.RADIUS,26,20);
 		this.canvas_element_legs_2 = paper.image(this.IMAGE_SRC_LEGS_2,this.positionX-this.RADIUS,this.positionY-this.RADIUS,26,20).hide();
+
+		//Body
 		this.canvas_element_body = paper.image(this.IMAGE_SRC_BODY,this.positionX-this.RADIUS,this.positionY - this.RADIUS,20,20);
+
+		//Vision Lines
+		//Create lines
+		var i = 0;
+		for(var x = 0; x < walls.length; x++){
+			var segments = walls[x];
+			for(var y = 0; y < segments.length; y++){
+				this.sight_lines_element[i] = paper.path("M" + this.positionX + "," + this.positionY + "L" + segments[y].a.x + "," + segments[y].a.y).attr({"stroke":"yellow"});
+				this.sight_lines[i] = new line_seg(new point(this.positionX,this.positionY),new point(segments[y].a.x,segments[y].a.y));
+				this.sight_lines_intersect[i] = new line_seg(new point(this.positionX,this.positionY),new point(segments[y].a.x,segments[y].a.y));
+				i++;
+			}
+		}
+		
+		this.sight_lines_intersect = this.sight_lines_intersect.sort(function(a,b){
+			return - Math.atan2(a.p2.y - a.p1.y, a.p2.x - a.p1.x) + Math.atan2(b.p2.y - b.p1.y, b.p2.x - b.p1.x);
+			});
+		
+		//Fill in sight polygons
+		var path = "M"
+		for(var i = 0; i < this.sight_lines.length; i++){
+			path += this.sight_lines_intersect[i].p2.x + "," + this.sight_lines_intersect[i].p2.y + "L"
+		}
+		this.sight_lines_poly[0] = paper.path(path + this.sight_lines[0].p2.x + "," + this.sight_lines[0].p2.y); 
+
+		this.draw_update();
 	}
 
 	//Update the canvas
 	this.draw_update = function(){
+		//Legs
 		this.canvas_element_legs_1.attr({x: this.positionX-this.RADIUS-3, y: this.positionY-this.RADIUS});
 		this.canvas_element_legs_2.attr({x: this.positionX-this.RADIUS-3, y: this.positionY-this.RADIUS});
+
+		//Body
 		this.canvas_element_body.attr({x: this.positionX-this.RADIUS, y: this.positionY-this.RADIUS});
+
+		//Hands
 		this.canvas_element_right_hand.attr({x: this.positionX-this.RADIUS + 17, y: this.positionY - this.RADIUS - 35});
 		this.canvas_element_left_hand.attr({x: this.positionX-this.RADIUS, y: this.positionY - this.RADIUS - 10});
+
+		//Rotations
 		this.canvas_element_legs_1.transform("r" + this.rotation);
 		this.canvas_element_legs_2.transform("r" + this.rotation);
 		this.canvas_element_body.transform("r" + this.rotation);
@@ -579,6 +719,56 @@ function Player(){
 			this.canvas_element_legs_1.hide();
 			this.canvas_element_legs_2.show();
 		}
+
+		//Check lines with every other line
+		for(var i = 0; i < this.sight_lines.length; i++){
+			var closest_result = new intersection();
+			this.sight_lines[i].p1.x = this.positionX;
+			this.sight_lines[i].p1.y = this.positionY;
+			for(var x = 0; x < walls.length; x++){
+				var segments = walls[x];
+				for(var y = 0; y < segments.length; y++){
+					var result = line_seg_intersect(new line_seg(new point(this.sight_lines[i].p1.x,this.sight_lines[i].p1.y),
+							 new point(this.sight_lines[i].p1.x + ((this.sight_lines[i].p2.x - this.sight_lines[i].p1.x)*10),
+									   this.sight_lines[i].p1.y + ((this.sight_lines[i].p2.y - this.sight_lines[i].p1.y)*10))),
+													new line_seg(new point(segments[y].a.x,segments[y].a.y),
+																 new point(segments[y].b.x,segments[y].b.y)));
+					if(result.onLine1 && result.onLine2){
+						if(closest_result.onLine1 && closest_result.onLine2){
+							if(Math.sqrt((result.x - this.positionX)*(result.x - this.positionX) + (result.y - this.positionY)*(result.y - this.positionY)) < Math.sqrt((closest_result.x - this.positionX)*(closest_result.x - this.positionX) + (closest_result.y - this.positionY)*(closest_result.y - this.positionY)))
+								closest_result = result;
+						}
+						else
+							closest_result = result;
+					}
+				}
+			}
+			if(closest_result.onLine1 && closest_result.onLine2){
+				this.sight_lines_intersect[i].p2.x = closest_result.x;
+				this.sight_lines_intersect[i].p2.y = closest_result.y;
+				this.sight_lines_intersect[i].p1.x = this.positionX;
+				this.sight_lines_intersect[i].p1.y = this.positionY;
+				this.sight_lines_element[i].attr("path", "M" + this.positionX + "," + this.positionY + "L" + closest_result.x + "," + closest_result.y);
+			}
+			else{
+				this.sight_lines_intersect[i].p2.x = this.sight_lines[i].p2.x;
+				this.sight_lines_intersect[i].p2.y = this.sight_lines[i].p2.y;
+				this.sight_lines_intersect[i].p1.x = this.positionX;
+				this.sight_lines_intersect[i].p1.y = this.positionY;
+				this.sight_lines_element[i].attr("path", "M" + this.positionX + "," + this.positionY + "L" + this.sight_lines[i].p2.x + "," + this.sight_lines[i].p2.y);
+			}
+		}
+		
+		this.sight_lines_intersect = this.sight_lines_intersect.sort(function(a,b){
+			return Math.atan2(a.p2.y - a.p1.y, a.p2.x - a.p1.x) - Math.atan2(b.p2.y - b.p1.y, b.p2.x - b.p1.x);
+			});
+
+		//Fill in sight polygons
+		var path = "M"
+		for(var i = 0; i < this.sight_lines.length; i++){
+			path += this.sight_lines_intersect[i].p2.x + "," + this.sight_lines_intersect[i].p2.y + "L"
+		}
+		this.sight_lines_poly[0].attr("path", path + this.sight_lines[0].p2.x + "," + this.sight_lines[0].p2.y); 
 	}
 }
 
@@ -593,5 +783,58 @@ function changeKey(which, to){
 		case 16: key[6]=to; break; //shift
 	}
 }
+
 document.onkeydown=function(e){changeKey((e||window.event).keyCode, 1);};
 document.onkeyup=function(e){changeKey((e||window.event).keyCode, 0);};
+
+//GEOMETRY
+function line_seg(point_1,point_2){
+	this.p1 = point_1;
+	this.p2 = point_2;
+}
+
+function point(a_x,a_y){
+	this.x = a_x;
+	this.y = a_y;
+}
+
+function intersection(){
+	this.x = 0;
+	this.y = 0;
+	this.onLine1 = false;
+	this.onLine2 = false;
+}
+
+function line_seg_intersect(seg_1,seg_2){
+	var result = new intersection();
+
+	var denominator = ((seg_2.p2.y - seg_2.p1.y) * (seg_1.p2.x - seg_1.p1.x)) - ((seg_2.p2.x - seg_2.p1.x) * (seg_1.p2.y - seg_1.p1.y));
+	if (denominator == 0) {
+        return false;
+    }
+    var a = seg_1.p1.y - seg_2.p1.y;
+    var b = seg_1.p1.x - seg_2.p1.x;
+    var numerator1 = ((seg_2.p2.x - seg_2.p1.x) * a) - ((seg_2.p2.y - seg_2.p1.y) * b);
+    var numerator2 = ((seg_1.p2.x - seg_1.p1.x) * a) - ((seg_1.p2.y - seg_1.p1.y) * b);
+    a = numerator1 / denominator;
+    b = numerator2 / denominator;	
+
+    // if we cast these lines infinitely in both directions, they intersect here:
+    result.x = seg_1.p1.x + (a * (seg_1.p2.x - seg_1.p1.x));
+    result.y = seg_1.p1.y + (a * (seg_1.p2.y - seg_1.p1.y));
+/*
+        // it is worth noting that this should be the same as:
+        x = seg_2.p1.x + (b * (seg_2.p2.x - seg_2.p1.x));
+        y = seg_2.p1.x + (b * (seg_2.p2.y - seg_2.p1.y));
+        */
+    // if line1 is a segment and line2 is infinite, they intersect if:
+    if (a >= 0 && a <= 1) {
+        result.onLine1 = true;
+    }
+    // if line2 is a segment and line1 is infinite, they intersect if:
+    if (b >= 0 && b <= 1) {
+        result.onLine2 = true;
+    }
+    // if line1 and line2 are segments, they intersect if both of the above are true
+    return result;
+}
