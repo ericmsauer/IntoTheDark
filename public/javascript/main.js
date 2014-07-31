@@ -9,61 +9,24 @@ window.onload = function () {
 };
 
 // LINE SEGMENTS
-var walls = [
-
+var walls;
+var enemies;
+var level_1 = [
 	// Border
-	[
-	{a:{x:0,y:0}, b:{x:640,y:0}},
+	[{a:{x:0,y:0}, b:{x:640,y:0}},
 	{a:{x:640,y:0}, b:{x:640,y:480}},
 	{a:{x:640,y:480}, b:{x:0,y:480}},
-	{a:{x:0,y:480}, b:{x:0,y:0}}
-	],
-
-	// Polygon #1
-	[
-	{a:{x:100,y:150}, b:{x:120,y:50}},
-	{a:{x:120,y:50}, b:{x:200,y:80}},
-	{a:{x:200,y:80}, b:{x:140,y:210}},
-	{a:{x:140,y:210}, b:{x:100,y:150}}
-	],
-
-	// Polygon #2
-	[
-	{a:{x:100,y:200}, b:{x:120,y:250}},
-	{a:{x:120,y:250}, b:{x:60,y:250}},
-	{a:{x:60,y:250}, b:{x:100,y:200}}
-	],
-
-	// Polygon #3
-	[
-	{a:{x:200,y:260}, b:{x:220,y:150}},
-	{a:{x:220,y:150}, b:{x:300,y:200}},
-	{a:{x:300,y:200}, b:{x:350,y:320}},
-	{a:{x:350,y:320}, b:{x:200,y:260}}
-	],
-
-	// Polygon #4
-	[
-	{a:{x:340,y:60}, b:{x:360,y:40}},
-	{a:{x:360,y:40}, b:{x:370,y:70}},
-	{a:{x:370,y:70}, b:{x:340,y:60}}
-	],
-
-	// Polygon #5
-	[
-	{a:{x:450,y:190}, b:{x:560,y:170}},
-	{a:{x:560,y:170}, b:{x:540,y:270}},
-	{a:{x:540,y:270}, b:{x:430,y:290}},
-	{a:{x:430,y:290}, b:{x:450,y:190}}
-	],
-
-	// Polygon #6
-	[
-	{a:{x:400,y:95}, b:{x:580,y:50}},
-	{a:{x:580,y:50}, b:{x:480,y:150}},
-	{a:{x:480,y:150}, b:{x:400,y:95}}
-	]
-
+	{a:{x:0,y:480}, b:{x:0,y:0}}],
+	
+	//Walls
+	[{a:{x:200,y:0}, b:{x:200,y:100}},
+	{a:{x:200,y:100}, b:{x:100,y:100}},
+	{a:{x:100,y:100}, b:{x:100,y:400}},
+	{a:{x:100,y:400}, b:{x:200,y:400}},
+	{a:{x:200,y:400}, b:{x:200,y:480}},
+	{a:{x:200,y:480}, b:{x:0,y:480}},
+	{a:{x:0,y:480}, b:{x:0,y:0}},
+	{a:{x:0,y:0}, b:{x:200,y:0}}]
 ];
 
 //GAME
@@ -82,6 +45,8 @@ function Game(){
 	this.player;
 	this.collision_units = new Array(); //Array of units to be checked for collision
 	this.collision_walls = new Array();
+
+	this.level;
 	
 	//Mouse Attributes
 	this.mouse_x = 0;
@@ -100,17 +65,16 @@ function Game(){
 				var seg = segments[y];
 				path += "L" + seg.b.x + "," + seg.b.y;
 			}
-			if(x != 0)
-				this.collision_walls[i] = paper.path(path).attr({fill:"grey"});
+			if(x != 0){
+				this.collision_walls[i] = paper.path(path).attr({fill:"black",stroke:"white"});
+				this.collision_walls[i].attr("stroke-width","3");
+			}
 		}
-		//Draw UI
-		//this.game_UI = paper.text(60,10,"Score: " + this.score + " Health: " + this.player.health);
 		//Draw player and units
-		this.player.draw(); //Draw the player
-		//Draw the units #TODO Seperate into different array?
 		for(var i=1; i<this.collision_units.length; i++){
 			this.collision_units[i].draw();
 		}
+		this.player.draw(); //Draw the player
 		//Add elements to game element Array
 		this.game_elements[0] = this.game_UI;
 		this.game_elements[1] = this.player.canvas_element;
@@ -207,14 +171,13 @@ function Game(){
 		//Init player and units
 		this.player = new Player();
 		this.collision_units[0] = this.player;	
-		unit1 = new unit_1(300,400,true,0);
-		unit2 = new unit_1(500,350,true,1);
-		unit3 = new unit_1(400,250,false,0);
-		unit4 = new unit_1(550,150,false,1);
-		this.collision_units[1] = unit1;
-		this.collision_units[2] = unit2;
-		this.collision_units[3] = unit3;
-		this.collision_units[4] = unit4;
+		//Set Level
+		if(this.level = 1){
+			walls = level_1;
+			this.player.positionX = 320;
+			this.player.positionY = 400;
+		}
+		
 		//Hide main menu elements
 		this.hide_mainmenu();
 		//Draw game elements
@@ -227,8 +190,8 @@ function Game(){
 
 	//Initialize the game
 	this.init = function(){
-		this.game_background = paper.rect(0, 0, 640, 480).attr({fill: "#ccc", stroke: "none"}); //Create game box view
-		this.game_foreground = paper.rect(0, 0, 640, 480).attr({fill: "#000", opacity: ".0"});
+		this.game_background = paper.rect(0, 0, 640, 480).attr({fill: "#999", stroke: "none"}); //Create game box view
+		this.game_foreground = paper.rect(0, 0, 640, 480).attr({fill: "#000", opacity: "0"});
 		this.game_foreground.mousemove(function (event){
 			game.mouse_x = event.offsetX;
 			game.mouse_y = event.offsetY;
@@ -490,8 +453,8 @@ function unit_1(startx, starty, face, block){
 //---------------------------------------PLAYER--------------------------
 function Player(){
 	// Attributes
-	this.positionX = 50;
-	this.positionY = 50;
+	this.positionX = 0;
+	this.positionY = 0;
 	this.rotation = 0; 
 	this.RADIUS = 10;
 	this.COLLISION_RADIUS = this.RADIUS + 2;
@@ -618,11 +581,13 @@ function Player(){
 
 	//Collision
 	this.check_collision = function(){
+		if(game.boundary_collision(this))
+			this.reset_position();
 		for(var i=1; i<game.collision_units.length; i++){
 			unit = game.collision_units[i];
 			if(this.right_hand_use == 1)
 				game.weapon_collision(this,unit);
-			if(game.unit_collision(this,unit) || game.boundary_collision(this)){
+			if(game.unit_collision(this,unit)){
 				this.reset_position();
 			}
 		}	
@@ -643,13 +608,17 @@ function Player(){
 		}
 	}
 
-	this.sight_lines = new Array();
-	this.sight_lines_intersect = new Array();
+	this.sight_line_angles = new Array();
+	this.sight_line_intersects = new Array();
 	this.sight_lines_element = new Array();
-	this.sight_lines_poly = new Array();
+	this.sight_lines_poly;
+	this.sight_lines_poly_1;
 
 	//Draw
 	this.draw = function(){
+		this.sight_lines_poly = paper.path();
+		this.sight_lines_poly_1 = paper.path();
+
 		//Hands
 		this.canvas_element_left_hand = paper.image(this.IMAGE_SRC_LEFT_HAND,this.positionX-this.RADIUS-20,this.positionY-this.RADIUS-20,25,5);
 		this.canvas_element_right_hand = paper.image(this.IMAGE_SRC_RIGHT_HAND,this.positionX-this.RADIUS-20,this.positionY-this.RADIUS-20,15,40);
@@ -660,31 +629,6 @@ function Player(){
 
 		//Body
 		this.canvas_element_body = paper.image(this.IMAGE_SRC_BODY,this.positionX-this.RADIUS,this.positionY - this.RADIUS,20,20);
-
-		//Vision Lines
-		//Create lines
-		var i = 0;
-		for(var x = 0; x < walls.length; x++){
-			var segments = walls[x];
-			for(var y = 0; y < segments.length; y++){
-				this.sight_lines_element[i] = paper.path("M" + this.positionX + "," + this.positionY + "L" + segments[y].a.x + "," + segments[y].a.y).attr({"stroke":"yellow"});
-				this.sight_lines[i] = new line_seg(new point(this.positionX,this.positionY),new point(segments[y].a.x,segments[y].a.y));
-				this.sight_lines_intersect[i] = new line_seg(new point(this.positionX,this.positionY),new point(segments[y].a.x,segments[y].a.y));
-				i++;
-			}
-		}
-		
-		this.sight_lines_intersect = this.sight_lines_intersect.sort(function(a,b){
-			return - Math.atan2(a.p2.y - a.p1.y, a.p2.x - a.p1.x) + Math.atan2(b.p2.y - b.p1.y, b.p2.x - b.p1.x);
-			});
-		
-		//Fill in sight polygons
-		var path = "M"
-		for(var i = 0; i < this.sight_lines.length; i++){
-			path += this.sight_lines_intersect[i].p2.x + "," + this.sight_lines_intersect[i].p2.y + "L"
-		}
-		this.sight_lines_poly[0] = paper.path(path + this.sight_lines[0].p2.x + "," + this.sight_lines[0].p2.y); 
-
 		this.draw_update();
 	}
 
@@ -720,19 +664,30 @@ function Player(){
 			this.canvas_element_legs_2.show();
 		}
 
-		//Check lines with every other line
-		for(var i = 0; i < this.sight_lines.length; i++){
+		//Determine rays
+		var i = 0;
+		for(var x = 0; x < walls.length; x++){
+			for(var y = 0; y < walls[x].length; y++){
+				this.sight_line_angles[i] = Math.atan2(walls[x][y].b.y-this.positionY,walls[x][y].b.x-this.positionX);
+				i++;
+			}
+		}
+
+		//Check rays with every other line
+		var j = 0;
+		for(var i = 0; i < this.sight_line_angles.length; i++){
+			var offset = .001;
 			var closest_result = new intersection();
-			this.sight_lines[i].p1.x = this.positionX;
-			this.sight_lines[i].p1.y = this.positionY;
+			var closest_result_neg = new intersection();
+			var closest_result_pos = new intersection();
 			for(var x = 0; x < walls.length; x++){
-				var segments = walls[x];
-				for(var y = 0; y < segments.length; y++){
-					var result = line_seg_intersect(new line_seg(new point(this.sight_lines[i].p1.x,this.sight_lines[i].p1.y),
-							 new point(this.sight_lines[i].p1.x + ((this.sight_lines[i].p2.x - this.sight_lines[i].p1.x)*10),
-									   this.sight_lines[i].p1.y + ((this.sight_lines[i].p2.y - this.sight_lines[i].p1.y)*10))),
-													new line_seg(new point(segments[y].a.x,segments[y].a.y),
-																 new point(segments[y].b.x,segments[y].b.y)));
+				for(var y = 0; y < walls[x].length; y++){
+					//Standard Angle
+					var result = line_seg_intersect(new line_seg(new point(this.positionX,this.positionY),
+							 									 new point(Math.cos(this.sight_line_angles[i])*1000 + this.positionX,
+							 									 		   Math.sin(this.sight_line_angles[i])*1000 + this.positionY)),
+													new line_seg(new point(walls[x][y].a.x,walls[x][y].a.y),
+																 new point(walls[x][y].b.x,walls[x][y].b.y)));
 					if(result.onLine1 && result.onLine2){
 						if(closest_result.onLine1 && closest_result.onLine2){
 							if(Math.sqrt((result.x - this.positionX)*(result.x - this.positionX) + (result.y - this.positionY)*(result.y - this.positionY)) < Math.sqrt((closest_result.x - this.positionX)*(closest_result.x - this.positionX) + (closest_result.y - this.positionY)*(closest_result.y - this.positionY)))
@@ -741,34 +696,63 @@ function Player(){
 						else
 							closest_result = result;
 					}
+					//Negative Offset
+					result = line_seg_intersect(new line_seg(new point(this.positionX,this.positionY),
+							 									 new point(Math.cos(this.sight_line_angles[i]-offset)*1000 + this.positionX,
+							 									 		   Math.sin(this.sight_line_angles[i]-offset)*1000 + this.positionY)),
+													new line_seg(new point(walls[x][y].a.x,walls[x][y].a.y),
+																 new point(walls[x][y].b.x,walls[x][y].b.y)));
+					if(result.onLine1 && result.onLine2){
+						if(closest_result_neg.onLine1 && closest_result_neg.onLine2){
+							if(Math.sqrt((result.x - this.positionX)*(result.x - this.positionX) + (result.y - this.positionY)*(result.y - this.positionY)) < Math.sqrt((closest_result_neg.x - this.positionX)*(closest_result_neg.x - this.positionX) + (closest_result_neg.y - this.positionY)*(closest_result_neg.y - this.positionY)))
+								closest_result_neg = result;
+						}
+						else
+							closest_result_neg = result;
+					}
+					//Positive Offset
+					result = line_seg_intersect(new line_seg(new point(this.positionX,this.positionY),
+							 									 new point(Math.cos(this.sight_line_angles[i]+offset)*1000 + this.positionX,
+							 									 		   Math.sin(this.sight_line_angles[i]+offset)*1000 + this.positionY)),
+													new line_seg(new point(walls[x][y].a.x,walls[x][y].a.y),
+																 new point(walls[x][y].b.x,walls[x][y].b.y)));
+					if(result.onLine1 && result.onLine2){
+						if(closest_result_pos.onLine1 && closest_result_pos.onLine2){
+							if(Math.sqrt((result.x - this.positionX)*(result.x - this.positionX) + (result.y - this.positionY)*(result.y - this.positionY)) < Math.sqrt((closest_result_pos.x - this.positionX)*(closest_result_pos.x - this.positionX) + (closest_result_pos.y - this.positionY)*(closest_result_pos.y - this.positionY)))
+								closest_result_pos = result;
+						}
+						else
+							closest_result_pos = result;
+					}
 				}
 			}
-			if(closest_result.onLine1 && closest_result.onLine2){
-				this.sight_lines_intersect[i].p2.x = closest_result.x;
-				this.sight_lines_intersect[i].p2.y = closest_result.y;
-				this.sight_lines_intersect[i].p1.x = this.positionX;
-				this.sight_lines_intersect[i].p1.y = this.positionY;
-				this.sight_lines_element[i].attr("path", "M" + this.positionX + "," + this.positionY + "L" + closest_result.x + "," + closest_result.y);
-			}
-			else{
-				this.sight_lines_intersect[i].p2.x = this.sight_lines[i].p2.x;
-				this.sight_lines_intersect[i].p2.y = this.sight_lines[i].p2.y;
-				this.sight_lines_intersect[i].p1.x = this.positionX;
-				this.sight_lines_intersect[i].p1.y = this.positionY;
-				this.sight_lines_element[i].attr("path", "M" + this.positionX + "," + this.positionY + "L" + this.sight_lines[i].p2.x + "," + this.sight_lines[i].p2.y);
-			}
+			//Standard
+			this.sight_line_intersects[j] = new line_seg(new point(this.positionX,this.positionY),
+													  new point(closest_result.x,closest_result.y));
+			j++;
+			this.sight_line_intersects[j] = new line_seg(new point(this.positionX,this.positionY),
+													  new point(closest_result_neg.x,closest_result_neg.y));
+			j++;
+			this.sight_line_intersects[j] = new line_seg(new point(this.positionX,this.positionY),
+													  new point(closest_result_pos.x,closest_result_pos.y));
+			j++;
 		}
 		
-		this.sight_lines_intersect = this.sight_lines_intersect.sort(function(a,b){
+		this.sight_line_intersects = this.sight_line_intersects.sort(function(a,b){
 			return Math.atan2(a.p2.y - a.p1.y, a.p2.x - a.p1.x) - Math.atan2(b.p2.y - b.p1.y, b.p2.x - b.p1.x);
 			});
 
 		//Fill in sight polygons
 		var path = "M"
-		for(var i = 0; i < this.sight_lines.length; i++){
-			path += this.sight_lines_intersect[i].p2.x + "," + this.sight_lines_intersect[i].p2.y + "L"
+		for(var i = 0; i < this.sight_line_intersects.length; i++){
+			path += this.sight_line_intersects[i].p2.x + "," + this.sight_line_intersects[i].p2.y + "L";
 		}
-		this.sight_lines_poly[0].attr("path", path + this.sight_lines[0].p2.x + "," + this.sight_lines[0].p2.y); 
+		path += this.sight_line_intersects[0].p2.x + "," + this.sight_line_intersects[0].p2.y + "z";
+		path += "M0,0L0,480L640,480L640,0L0,0z";
+		this.sight_lines_poly.attr({path:path + this.sight_line_intersects[0].p2.x + "," + this.sight_line_intersects[0].p2.y,
+									stroke:"none",
+									fill:" black",
+									opacity:"1"});
 	}
 }
 
