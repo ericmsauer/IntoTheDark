@@ -8,80 +8,86 @@ window.onload = function () {
 	game = new Game();
 };
 
-// LINE SEGMENTS
-var walls;
-var enemies;
-var level_1 = [
-	// Border
-	[{a:{x:0,y:0}, b:{x:640,y:0}},
-	{a:{x:640,y:0}, b:{x:640,y:480}},
-	{a:{x:640,y:480}, b:{x:0,y:480}},
-	{a:{x:0,y:480}, b:{x:0,y:0}}],
-	
-	//Walls
-	[{a:{x:200,y:0}, b:{x:200,y:100}},
-	{a:{x:200,y:100}, b:{x:100,y:100}},
-	{a:{x:100,y:100}, b:{x:100,y:400}},
-	{a:{x:100,y:400}, b:{x:200,y:400}},
-	{a:{x:200,y:400}, b:{x:200,y:480}},
-	{a:{x:200,y:480}, b:{x:0,y:480}},
-	{a:{x:0,y:480}, b:{x:0,y:0}},
-	{a:{x:0,y:0}, b:{x:200,y:0}}]
-];
-
 //GAME
 function Game(){
 	//Canvas elements
 	this.game_background;
 	this.game_foreground;
-	this.mainmenu_start_button;
-	this.mainmenu_title;
-	this.game_UI;
 	this.mainmenu_elements = new Array();
 	this.game_elements = new Array();
+	this.game_tips = new Array();
 	//Other
 	this.game_interval;
+	this.mainmenu_interval;
 	//Game related variables
+	this.levelx = 1;
+	this.levely = 1;
+	//Pre-game loads
 	this.player;
-	this.collision_units = new Array(); //Array of units to be checked for collision
-	this.collision_walls = new Array();
-
-	this.level;
+	this.units;
+	this.collision_units = new Array();
+	this.walls;
+	this.collision_walls;
 	
 	//Mouse Attributes
 	this.mouse_x = 0;
 	this.mouse_y = 0;
 	this.mouse_click = 0;
+	
 	//Audio
 	var sound_shield_hit = new Audio("/sounds/shield_hit.wav");
 
 	//---------------------------------------Draw Functions--------------------------
 	this.draw_init_game = function(){
+		//Draw Floor
+		for(var x = 0; x < 640/40; x ++){
+			for(var y = 0; y < 480/40; y ++){
+				this.game_background[x][y].show();
+			}
+		}
+
+		//Draw Game Tips
+		if(this.levely < this.game_tips.length)
+			this.game_tips[this.levely].show();
+		
 		//Draw Enviornment
-		for(var x = 0; x < walls.length; x++){
-			var segments = walls[x];
-			var path = "M" + segments[0].a.x + "," + segments[0].a.y;
-			for(var y = 0; y < segments.length; y++){
-				var seg = segments[y];
-				path += "L" + seg.b.x + "," + seg.b.y;
-			}
-			if(x != 0){
-				this.collision_walls[i] = paper.path(path).attr({fill:"black",stroke:"white"});
-				this.collision_walls[i].attr("stroke-width","3");
-			}
+		for(var i = 0; i < this.collision_walls[this.levelx][this.levely].length; i++){
+			this.collision_walls[this.levelx][this.levely][i].show();
 		}
-		//Draw player and units
-		for(var i=1; i<this.collision_units.length; i++){
-			this.collision_units[i].draw();
+
+		//Draw Units
+		for(var i = 0; i < this.units[this.levelx][this.levely].length; i++){
+			this.units[this.levelx][this.levely][i].start();
+			this.collision_units[i+1] = this.units[this.levelx][this.levely][i];
 		}
-		this.player.draw(); //Draw the player
-		//Add elements to game element Array
-		this.game_elements[0] = this.game_UI;
-		this.game_elements[1] = this.player.canvas_element;
-		for(var i=1; i<this.collision_units.length; i++){
-			this.game_elements.push(this.collision_units[i].canvas_element);
-		}
+		
 		this.game_foreground.toFront();
+	}
+
+	this.hide_init_game = function(){
+		//Hide floors
+		for(var x = 0; x < 640/40; x ++){
+			for(var y = 0; y < 480/40; y ++){
+				this.game_background[x][y].hide();
+			}
+		}
+
+		//Hide walls
+		for(var i = 0; i < this.collision_walls[this.levelx][this.levely].length; i++){
+			this.collision_walls[this.levelx][this.levely][i].hide();
+		}
+
+		//Hide tips
+		if(this.levely < this.game_tips.length)
+			this.game_tips[this.levely].hide();
+
+		//Hide Units
+		for(var i = 0; i < this.units[this.levelx][this.levely].length; i++){
+			this.units[this.levelx][this.levely][i].stop();
+		}
+
+		this.collision_units = new Array();
+		this.collision_units[0] = this.player;
 	}
 	
 	this.draw_updated_game = function(){
@@ -93,48 +99,32 @@ function Game(){
 		}
 		//Update Player
 		this.player.draw_update();
-		//If the player is dead
-		if(this.player.dead == true) {
-			this.hide_game();
-			gameover = paper.text(320,240,"GAME OVER").attr({fill: "#A00"}).scale(10,10);
-			clearInterval(this.game_interval);
-		}
 		this.game_foreground.toFront();
-	}
-	
-	this.draw_game = function(){
-		for(var i=0; i<this.collision_units.length; i++){
-			this.collision_units[i].show();
-		}
-		for(var i=0; i<this.collision_walls.length; i++){
-			this.collision_walls[i].show();
-		}
-	}
-	
-	this.hide_game = function(){
-		for(var i=0; i<this.collision_units.length; i++){
-			this.collision_units[i].hide();
-		}
-		for(var i=0; i<this.collision_walls.length; i++){
-			this.collision_walls[i].hide();
-		}
 	}
 
 	//Main menu draw functions
 	this.draw_init_mainmenu = function(){
-		mainmenu_title = paper.text(320,60,"Game").scale(10,10);
-		mainmenu_start_button = paper.rect(160,140,320,60).attr({fill: "#f0f"});
-		mainmenu_start_button.node.onclick = function(){game.start_game();}
-		mainmenu_start_text = paper.text(320,170,"Start").scale(5,5);
-		mainmenu_start_text.node.onclick = function(){game.start_game();}
+		mainmenu_background = paper.rect(0, 0, 640, 480);
+		mainmenu_background.attr({fill:"black",opacity:"1"});
+
+		mainmenu_title = paper.text(320,200,"Hidden in the Dark").scale(5,10);
+		mainmenu_title.attr({"font-family": "WC", fill:"white",opacity:"0"});
+
 		//Add elements to game element Array
-		this.mainmenu_elements[0] = mainmenu_start_button;
-		this.mainmenu_elements[1] = mainmenu_start_text;
-		this.mainmenu_elements[2] = mainmenu_title;
+		this.mainmenu_elements[0] = mainmenu_background;
+		this.mainmenu_elements[1] = mainmenu_title;
+
+		//Start mainmenu animation]
+		mainmenu_title.animate({opacity:"1"},1000,
+			function(){
+				game.mainmenu_elements[1].animate({opacity:"0"},1000,
+					function(){
+						game.start_game();
+					});
+			});
 	}
 	
 	this.draw_updated_mainmenu = function(){
-			
 	}
 	
 	this.draw_mainmenu = function(){
@@ -152,13 +142,6 @@ function Game(){
 	//---------------------------------------Update Functions--------------------------
 	//Update all objects in the game
 	this.update_game = function(){	
-		//Update counter
-		if(this.update_counter < 100) {
-			this.update_counter += 1;
-		} else {
-			this.update_counter = 0;
-		}
-		
 		this.player.update();
 		for(var i=1; i<this.collision_units.length; i++){
 			this.collision_units[i].update();
@@ -166,21 +149,28 @@ function Game(){
 		this.draw_updated_game();
 	}
 
+	//Update all objects in the mainmenu
+	this.update_mainmenu = function(){
+		this.draw_updated_mainmenu();
+	}
+
 	//---------------------------------------Init Functions--------------------------
 	this.start_game = function(){
+		//Set Level
+		this.levelx = 0;
+		this.levely = 0;
 		//Init player and units
 		this.player = new Player();
-		this.collision_units[0] = this.player;	
-		//Set Level
-		if(this.level = 1){
-			walls = level_1;
-			this.player.positionX = 320;
-			this.player.positionY = 400;
-		}
+		this.collision_units[0] = this.player;
+		this.player.positionX = 320;
+		this.player.positionY = 440;
 		
+		clearInterval(this.mainmenu_interval);
+
 		//Hide main menu elements
 		this.hide_mainmenu();
 		//Draw game elements
+		this.player.draw(); //Draw the player
 		this.draw_init_game();
 		//Start update interval
 		this.game_interval = setInterval(function() {
@@ -190,7 +180,50 @@ function Game(){
 
 	//Initialize the game
 	this.init = function(){
-		this.game_background = paper.rect(0, 0, 640, 480).attr({fill: "#999", stroke: "none"}); //Create game box view
+		//LOAD EVERYTHING BECAUSE WHY NOT!
+		//Game Background
+		this.game_background = new Array();
+		for(var x = 0; x < 640/40; x++){
+			this.game_background[x] = new Array();
+			for(var y = 0; y < 480/40; y++){
+				this.game_background[x][y] = paper.image("/pictures/tile.jpg",x*40,y*40,40,40).hide();
+			}
+		}
+		
+		//Walls
+		this.walls = new Array();
+		this.collision_walls = new Array();
+		for(var y = 0; y < y_levels; y++){
+			this.walls[y] = new Array();
+			this.collision_walls[y] = new Array();
+		}
+		this.walls[0][0] = level_0_0;
+		this.walls[0][1] = level_0_1;
+		this.walls[0][2] = level_0_2;
+		this.collision_walls[0][0] = this.load_walls(level_0_0);
+		this.collision_walls[0][1] = this.load_walls(level_0_1);
+		this.collision_walls[0][2] = this.load_walls(level_0_2);
+
+		//Tips
+		this.game_tips[0] = paper.text(320,240,"W,A,S,D to move\n \nHold space to\nsprint").scale(2,2);
+		this.game_tips[0].attr({"font-family": "WC", fill:"white",opacity:"1"});
+		this.game_tips[1] = paper.text(320,240,"Hold shift to block\n \nClick left mouse\nbutton to attack").scale(2,2);
+		this.game_tips[1].attr({"font-family": "WC", fill:"white",opacity:"1"});
+		this.game_tips[2] = paper.text(320,380,"Beware of the dark").scale(2,2);
+		this.game_tips[2].attr({"font-family": "WC", fill:"white",opacity:"1"});
+		for(var i = 0; i < this.game_tips.length; i++)
+			this.game_tips[i].hide();
+
+		//Units
+		this.units = new Array();
+		for(var y = 0; y < y_levels; y++){
+			this.units[y] = new Array();
+		}
+		this.units[0][0] = this.load_units(level_0_0_units);
+		this.units[0][1] = this.load_units(level_0_1_units);
+		this.units[0][2] = this.load_units(level_0_2_units);
+
+		this.mainmenu_background = paper.rect(0, 0, 640, 480);
 		this.game_foreground = paper.rect(0, 0, 640, 480).attr({fill: "#000", opacity: "0"});
 		this.game_foreground.mousemove(function (event){
 			game.mouse_x = event.offsetX;
@@ -203,9 +236,37 @@ function Game(){
 			game.mouse_click = 0;
 		});
 		this.draw_init_mainmenu();
+		this.mainmenu_interval = setInterval(function() {
+			game.update_mainmenu();
+			}, 35);
 	}	
 
 	//---------------------------------------Game Functions--------------------------
+	//Function to load walls easily
+	this.load_walls = function(walls){
+		collision_walls = new Array();
+		//Load Walls
+		for(var i = 0; i < walls.length; i++){
+			var path = "M" + walls[i][0].a.x + "," + walls[i][0].a.y;
+			for(var j = 0; j < walls[i].length; j++){
+				path += "L" + walls[i][j].b.x + "," + walls[i][j].b.y;
+			}
+			collision_walls[i] = paper.path(path).hide();
+			if(i != 0)
+				collision_walls[i].attr({"stroke":"white","stroke-width":"3"});
+		}
+		return collision_walls;
+	}
+	//Function to load walls easily
+	this.load_units = function(units){
+		collision_units = new Array();
+		for(var i = 0; i < units.length; i++){
+			if(units[i].type == "arrow_shooter")
+				collision_units[i] = new arrow_shooter(units[i].x,units[i].y,units[i].direction);
+		}
+		return collision_units;
+	}
+
 	//Check collision between two units
 	this.unit_collision = function(unit,target_unit){
 		//Collision between two units
@@ -232,15 +293,14 @@ function Game(){
 		if(unit!=target_unit){
 			if(!unit.right_hand_hit){
 				var rotation1 = 180*Math.atan2(target_unit.positionY - unit.positionY, target_unit.positionX - unit.positionX)/Math.PI + 90;
-				if(rotation1 > unit.rotation - 20 && rotation1 < unit.rotation + 40){
+				if(rotation1 > unit.rotation + 70 && rotation1 < unit.rotation + 140){
 					var sq1 = Math.pow((unit.positionX-target_unit.positionX),2);
 					var sq2 = Math.pow((unit.positionY-target_unit.positionY),2);
 					var distance = unit.COLLISION_RADIUS+target_unit.COLLISION_RADIUS;
 					if(Math.sqrt(sq1 + sq2)<distance + unit.right_hand_length){
 						if(target_unit.left_hand_use){
 							var rotation2 = 180*Math.atan2(unit.positionY - target_unit.positionY, unit.positionX - target_unit.positionX)/Math.PI + 90;
-							if(rotation2 > target_unit.rotation - 25 && rotation2 < target_unit.rotation + 25){
-								unit.right_hand_use = 0;
+							if(rotation2 > target_unit.rotation + 65 && rotation2 < target_unit.rotation + 115){
 								unit.right_hand_hit = 1;
 								new Audio("/sounds/shield_hit.wav").play();
 								return;
@@ -257,8 +317,8 @@ function Game(){
 
 	//Check collision with boundaries
 	this.boundary_collision = function(unit){
-		for(var x = 0; x < walls.length; x++){
-			var segments = walls[x];
+		for(var x = 0; x < this.walls[this.levelx][this.levely].length; x++){
+			var segments = this.walls[this.levelx][this.levely][x];
 			for(var y = 0; y < segments.length; y++){
 				var seg_v_x = segments[y].b.x - segments[y].a.x;
 				var seg_v_y = segments[y].b.y - segments[y].a.y;
@@ -287,6 +347,26 @@ function Game(){
 				var dist_v_x = unit.positionX - closest_x;
 				var dist_v_y = unit.positionY - closest_y;
 				if(Math.sqrt(dist_v_x*dist_v_x + dist_v_y*dist_v_y) < unit.RADIUS){
+					if(x == 0 && unit == game.player){
+						this.hide_init_game();
+						if(y == 0){
+							this.levely += 1;
+							game.player.positionY = 480 - 20 - game.player.positionY;
+						}
+						if(y == 1){
+							this.levelx += 1;
+							game.player.positionX = 640 - 20 - game.player.positionX;
+						}
+						if(y == 2){
+							this.levely -= 1;
+							game.player.positionY = 480 + 20 - game.player.positionY;
+						}
+						if(y == 3){
+							this.levelx -= 1;
+							game.player.positionX = 640 + 20 - game.player.positionX;
+						}
+						this.draw_init_game();
+					}
 					return true;
 				}
 			}
@@ -295,159 +375,6 @@ function Game(){
 	}
 	
 	this.init();
-}
-
-//---------------------------------------UNITS--------------------------
-function unit_1(startx, starty, face, block){
-	// Attributes
-	this.positionX = startx;
-	this.positionY = starty;
-	this.rotation = 0; 
-	this.RADIUS = 10;
-	this.COLLISION_RADIUS = this.RADIUS + 1;
-	this.COLLISIONTYPE = 'circle';
-	this.health = 100;
-	this.MAX_HEALTH = 100;
-	this.dead = false;
-	//Equipment
-	this.right_hand = 0;
-	this.right_hand_use = 0;
-	this.left_hand = 0;
-	this.left_hand_use = 0;
-	//Movement
-	this.viewX = 0;
-	this.viewY = 0;
-	this.face_player = face;
-	this.north = false;
-	this.south = false;
-	this.west = false;
-	this.east = false;
-	this.distanceX = 0;
-	this.distanceY = 0;
-	//Canvas_elements
-	this.IMAGE_SRC_BODY = "/pictures/unit_1_body.png";
-	this.IMAGE_SRC_RIGHT_HAND = "/pictures/axe.png";
-	this.IMAGE_SRC_LEFT_HAND = "/pictures/shield.png"; 
-	this.canvas_element_body;
-	this.canvas_element_right_hand;
-	this.canvas_element_left_hand;
-	this.canvas_element_health;
-	this.action = [0,0,0,0,0,0,block,0];
-
-	this.update = function(){
-		//Death
-		if(this.health <= 0) {
-			this.health = 0;
-			this.dead = true; 
-		}
-		//Check if player is not dead
-		if(!this.dead){
-			//Movement	
-			if (this.action[0]) { //left
-				this.positionX -= 3;
-				this.west = true;
-				this.distanceX = 3;
-				game.score += 3;
-			}
-			if (this.action[1]) { //right
-				this.positionX += 3;
-				this.east = true;
-				this.distanceX = 3;
-				game.score += 3;
-			}
-			if (this.action[2]) { //up
-				this.positionY -= 3;
-				this.north = true;
-				this.distanceY = 3;
-				game.score += 3;
-			}
-			if (this.action[3]) { //down
-				this.positionY += 3;
-				this.south = true;
-				this.distanceY = 3;
-				game.score += 3;
-			}
-			if (this.action[4]) { //space
-			}
-			if (this.action[6])
-				this.left_hand_use = 1;
-			else
-				this.left_hand_use = 0;
-			if(this.action[7] == 1)
-				this.right_hand_use = 1;
-			else
-				this.right_hand_use = 0;
-				
-			
-			//Check for collision with other units and boundaries	
-			this.check_collision();
-
-			//Determine rotation needed to face the mouse
-			if(this.face_player)
-				this.rotation = 180*Math.atan2(game.player.positionY - this.positionY, game.player.positionX - this.positionX)/Math.PI + 90;	
-			else
-				this.rotation = 180*Math.atan2(this.viewY - this.positionY, this.viewX - this.positionX)/Math.PI + 90;
-
-			//Reset
-			this.north = false;
-			this.south = false;
-			this.east = false;
-			this.west = false;
-			this.distanceX = 0;
-			this.distanceY = 0;
-		}
-	}
-
-	//Collision
-	this.check_collision = function(){
-		for(var i=1; i<game.collision_units.length; i++){
-			unit = game.collision_units[i];
-			//if(game.unit_collision(this,unit) || game.boundary_collision(this)){
-			//	this.reset_position();
-			//}
-		}	
-	}
-
-	this.reset_position = function(){	
-		if(this.west){
-			this.positionX += this.distanceX;
-		}
-		if(this.east){
-			this.positionX -= this.distanceX;
-		}
-		if(this.north){
-			this.positionY += this.distanceY;
-		}
-		if(this.south){
-			this.positionY -= this.distanceY;
-		}
-	}
-
-	//Draw
-	this.draw = function(){
-		this.canvas_element_left_hand = paper.image(this.IMAGE_SRC_LEFT_HAND,this.positionX-this.RADIUS-20,this.positionY-this.RADIUS-20,25,5);
-		this.canvas_element_right_hand = paper.image(this.IMAGE_SRC_RIGHT_HAND,this.positionX-this.RADIUS-20,this.positionY-this.RADIUS-20,15,40);
-		this.canvas_element_body = paper.image(this.IMAGE_SRC_BODY,this.positionX-this.RADIUS + 15,this.positionY - this.RADIUS - 20,20,20);
-		this.canvas_element_health = paper.rect(this.positionX - this.RADIUS, this.positionY - this.RADIUS*2 - 5, this.RADIUS*2, 3);
-		this.canvas_element_health.attr({fill: "#0f0", stroke: "#0f0"});
-	}
-
-	//Update the canvas
-	this.draw_update = function(){
-		this.canvas_element_body.attr({x: this.positionX-this.RADIUS, y: this.positionY-this.RADIUS});
-		this.canvas_element_right_hand.attr({x: this.positionX-this.RADIUS + 17, y: this.positionY - this.RADIUS - 35});
-		this.canvas_element_left_hand.attr({x: this.positionX-this.RADIUS, y: this.positionY - this.RADIUS - 10});
-		this.canvas_element_health.attr({x: this.positionX - this.RADIUS, y: this.positionY - this.RADIUS*2 - 5, width:(this.RADIUS*2)*(this.health/this.MAX_HEALTH)});
-		this.canvas_element_body.transform("r" + this.rotation);
-		if(this.right_hand_use == 1)
-			this.canvas_element_right_hand.transform("r" + (this.rotation - 20) + "," + this.positionX + "," + this.positionY);
-		else
-			this.canvas_element_right_hand.transform("r" + (this.rotation + 40) + "," + this.positionX + "," + this.positionY);
-		if(this.left_hand_use == 1)
-			this.canvas_element_left_hand.transform("r" + (this.rotation - 20) + "," + this.positionX + "," + this.positionY);
-		else
-			this.canvas_element_left_hand.transform("r" + (this.rotation - 70) + "," + this.positionX + "," + this.positionY);
-	}
 }
 
 //---------------------------------------PLAYER--------------------------
@@ -460,6 +387,9 @@ function Player(){
 	this.COLLISION_RADIUS = this.RADIUS + 2;
 	this.COLLISIONTYPE = 'circle';
 	this.health = 100;
+	this.MAX_HEALTH = 100;
+	this.stamina= 100;
+	this.MAX_STAMINA = 100;
 	this.dead = false;
 	//Equipment
 	this.right_hand = 0;
@@ -471,6 +401,7 @@ function Player(){
 	this.right_hand_length = 40;
 	this.right_hand_damage = 25;
 	//Movement
+	this.speed = 3;
 	this.north = false;
 	this.south = false;
 	this.west = false;
@@ -488,6 +419,8 @@ function Player(){
 	this.canvas_element_body;
 	this.canvas_element_right_hand;
 	this.canvas_element_left_hand;
+	this.canvas_element_health;
+	this.canvas_element_stamina;
 	//Animations
 	this.right_hand_anim = 40;
 	this.left_hand_anim = 0;
@@ -496,32 +429,42 @@ function Player(){
 	this.update = function(){
 		//Death
 		if(this.health <= 0) {
-			this.dead = true; 
+			this.dead = true;
 		}
 		//Check if player is not dead
 		if(!this.dead){
 			//Movement	
+			if (key[4] && this.stamina != 0) { //space
+				this.speed = 5;
+				this.stamina -= 5;
+				if(this.stamina < 0)
+					this.stamina = 0;
+			}
+			else {
+				this.speed = 3;
+				this.stamina += 2;
+				if(this.stamina >= this.MAX_STAMINA)
+					this.stamina = this.MAX_STAMINA;
+			}
 			if (key[0]) { //left
-				this.positionX -= 3;
+				this.positionX -= this.speed;
 				this.west = true;
-				this.distanceX = 3;
+				this.distanceX = this.speed;
 			}
 			if (key[1]) { //right
-				this.positionX += 3;
+				this.positionX += this.speed;
 				this.east = true;
-				this.distanceX = 3;
+				this.distanceX = this.speed;
 			}
 			if (key[2]) { //up
-				this.positionY -= 3;
+				this.positionY -= this.speed;
 				this.north = true;
-				this.distanceY = 3;
+				this.distanceY = this.speed;
 			}
 			if (key[3]) { //down
-				this.positionY += 3;
+				this.positionY += this.speed;
 				this.south = true;
-				this.distanceY = 3;
-			}
-			if (key[4]) { //space
+				this.distanceY = this.speed;
 			}
 			if (key[6] && this.right_hand_anim == 40)
 				this.left_hand_use = 1;
@@ -567,7 +510,7 @@ function Player(){
 			this.check_collision();
 
 			//Determine rotation needed to face the mouse
-			this.rotation = 180*Math.atan2(game.mouse_y - this.positionY, game.mouse_x - this.positionX)/Math.PI + 90;
+			this.rotation = 180*Math.atan2(game.mouse_y - this.positionY, game.mouse_x - this.positionX)/Math.PI;
 
 			//Reset
 			this.north = false;
@@ -629,11 +572,22 @@ function Player(){
 
 		//Body
 		this.canvas_element_body = paper.image(this.IMAGE_SRC_BODY,this.positionX-this.RADIUS,this.positionY - this.RADIUS,20,20);
+
+		//UI
+		this.canvas_element_health = paper.rect(3, 3, 100, 4);
+		this.canvas_element_health.attr({fill: "#0f0", stroke: "#0f0"});
+		this.canvas_element_stamina = paper.rect(3, 11, 100, 4);
+		this.canvas_element_stamina.attr({fill: "#0f9", stroke: "#0f9"});
+
 		this.draw_update();
 	}
 
 	//Update the canvas
 	this.draw_update = function(){
+		//UI
+		this.canvas_element_health.animate({width:100*(this.health/this.MAX_HEALTH)}, 50);
+		this.canvas_element_stamina.animate({width:100*(this.stamina/this.MAX_STAMINA)}, 50);
+
 		//Legs
 		this.canvas_element_legs_1.attr({x: this.positionX-this.RADIUS-3, y: this.positionY-this.RADIUS});
 		this.canvas_element_legs_2.attr({x: this.positionX-this.RADIUS-3, y: this.positionY-this.RADIUS});
@@ -646,14 +600,14 @@ function Player(){
 		this.canvas_element_left_hand.attr({x: this.positionX-this.RADIUS, y: this.positionY - this.RADIUS - 10});
 
 		//Rotations
-		this.canvas_element_legs_1.transform("r" + this.rotation);
-		this.canvas_element_legs_2.transform("r" + this.rotation);
-		this.canvas_element_body.transform("r" + this.rotation);
-		this.canvas_element_right_hand.transform("r" + (this.rotation + this.right_hand_anim) + "," + this.positionX + "," + this.positionY);
+		this.canvas_element_legs_1.transform("r" + (this.rotation + 90));
+		this.canvas_element_legs_2.transform("r" + (this.rotation + 90));
+		this.canvas_element_body.transform("r" + (this.rotation + 90));
+		this.canvas_element_right_hand.transform("r" + (this.rotation + 90 + this.right_hand_anim) + "," + this.positionX + "," + this.positionY);
 		if(this.left_hand_use == 1)
-			this.canvas_element_left_hand.transform("r" + (this.rotation - 20) + "," + this.positionX + "," + this.positionY);
+			this.canvas_element_left_hand.transform("r" + (this.rotation + 70) + "," + this.positionX + "," + this.positionY);
 		else
-			this.canvas_element_left_hand.transform("r" + (this.rotation - 70) + "," + this.positionX + "," + this.positionY);
+			this.canvas_element_left_hand.transform("r" + (this.rotation - 20) + "," + this.positionX + "," + this.positionY);
 		
 		if(this.walk_anim < 5) {
 			this.canvas_element_legs_1.show();
@@ -666,9 +620,9 @@ function Player(){
 
 		//Determine rays
 		var i = 0;
-		for(var x = 0; x < walls.length; x++){
-			for(var y = 0; y < walls[x].length; y++){
-				this.sight_line_angles[i] = Math.atan2(walls[x][y].b.y-this.positionY,walls[x][y].b.x-this.positionX);
+		for(var x = 0; x < game.walls[game.levelx][game.levely].length; x++){
+			for(var y = 0; y < game.walls[game.levelx][game.levely][x].length; y++){
+				this.sight_line_angles[i] = Math.atan2(game.walls[game.levelx][game.levely][x][y].b.y-this.positionY,game.walls[game.levelx][game.levely][x][y].b.x-this.positionX);
 				i++;
 			}
 		}
@@ -680,14 +634,14 @@ function Player(){
 			var closest_result = new intersection();
 			var closest_result_neg = new intersection();
 			var closest_result_pos = new intersection();
-			for(var x = 0; x < walls.length; x++){
-				for(var y = 0; y < walls[x].length; y++){
+			for(var x = 0; x < game.walls[game.levelx][game.levely].length; x++){
+				for(var y = 0; y < game.walls[game.levelx][game.levely][x].length; y++){
 					//Standard Angle
 					var result = line_seg_intersect(new line_seg(new point(this.positionX,this.positionY),
 							 									 new point(Math.cos(this.sight_line_angles[i])*1000 + this.positionX,
 							 									 		   Math.sin(this.sight_line_angles[i])*1000 + this.positionY)),
-													new line_seg(new point(walls[x][y].a.x,walls[x][y].a.y),
-																 new point(walls[x][y].b.x,walls[x][y].b.y)));
+													new line_seg(new point(game.walls[game.levelx][game.levely][x][y].a.x,game.walls[game.levelx][game.levely][x][y].a.y),
+																 new point(game.walls[game.levelx][game.levely][x][y].b.x,game.walls[game.levelx][game.levely][x][y].b.y)));
 					if(result.onLine1 && result.onLine2){
 						if(closest_result.onLine1 && closest_result.onLine2){
 							if(Math.sqrt((result.x - this.positionX)*(result.x - this.positionX) + (result.y - this.positionY)*(result.y - this.positionY)) < Math.sqrt((closest_result.x - this.positionX)*(closest_result.x - this.positionX) + (closest_result.y - this.positionY)*(closest_result.y - this.positionY)))
@@ -700,8 +654,8 @@ function Player(){
 					result = line_seg_intersect(new line_seg(new point(this.positionX,this.positionY),
 							 									 new point(Math.cos(this.sight_line_angles[i]-offset)*1000 + this.positionX,
 							 									 		   Math.sin(this.sight_line_angles[i]-offset)*1000 + this.positionY)),
-													new line_seg(new point(walls[x][y].a.x,walls[x][y].a.y),
-																 new point(walls[x][y].b.x,walls[x][y].b.y)));
+													new line_seg(new point(game.walls[game.levelx][game.levely][x][y].a.x,game.walls[game.levelx][game.levely][x][y].a.y),
+																 new point(game.walls[game.levelx][game.levely][x][y].b.x,game.walls[game.levelx][game.levely][x][y].b.y)));
 					if(result.onLine1 && result.onLine2){
 						if(closest_result_neg.onLine1 && closest_result_neg.onLine2){
 							if(Math.sqrt((result.x - this.positionX)*(result.x - this.positionX) + (result.y - this.positionY)*(result.y - this.positionY)) < Math.sqrt((closest_result_neg.x - this.positionX)*(closest_result_neg.x - this.positionX) + (closest_result_neg.y - this.positionY)*(closest_result_neg.y - this.positionY)))
@@ -714,8 +668,8 @@ function Player(){
 					result = line_seg_intersect(new line_seg(new point(this.positionX,this.positionY),
 							 									 new point(Math.cos(this.sight_line_angles[i]+offset)*1000 + this.positionX,
 							 									 		   Math.sin(this.sight_line_angles[i]+offset)*1000 + this.positionY)),
-													new line_seg(new point(walls[x][y].a.x,walls[x][y].a.y),
-																 new point(walls[x][y].b.x,walls[x][y].b.y)));
+													new line_seg(new point(game.walls[game.levelx][game.levely][x][y].a.x,game.walls[game.levelx][game.levely][x][y].a.y),
+																 new point(game.walls[game.levelx][game.levely][x][y].b.x,game.walls[game.levelx][game.levely][x][y].b.y)));
 					if(result.onLine1 && result.onLine2){
 						if(closest_result_pos.onLine1 && closest_result_pos.onLine2){
 							if(Math.sqrt((result.x - this.positionX)*(result.x - this.positionX) + (result.y - this.positionY)*(result.y - this.positionY)) < Math.sqrt((closest_result_pos.x - this.positionX)*(closest_result_pos.x - this.positionX) + (closest_result_pos.y - this.positionY)*(closest_result_pos.y - this.positionY)))
@@ -750,9 +704,12 @@ function Player(){
 		path += this.sight_line_intersects[0].p2.x + "," + this.sight_line_intersects[0].p2.y + "z";
 		path += "M0,0L0,480L640,480L640,0L0,0z";
 		this.sight_lines_poly.attr({path:path + this.sight_line_intersects[0].p2.x + "," + this.sight_line_intersects[0].p2.y,
-									stroke:"none",
+									stroke:"black",
 									fill:" black",
 									opacity:"1"});
+
+		//UI
+		this.canvas_element_health.toFront();
 	}
 }
 
