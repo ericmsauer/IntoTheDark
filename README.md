@@ -7,4 +7,5 @@ Installation:
 - Run "npm install -g nodemon" for development
 
 Start Server:
-- For development run npm dev
+- node app.js
+- nodemon app.js

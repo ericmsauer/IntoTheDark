@@ -148,7 +148,7 @@ function Game(){
 				this.collision_units[i].update();
 			for(var i=0; i<this.triggers[this.levelx][this.levely].length; i++)
 				this.triggers[this.levelx][this.levely][i].check_collision();
-		this.draw_updated_game();
+			this.draw_updated_game();
 		}
 		else{
 			var death_text = paper.text(320,240,"You Died").scale(5,5);

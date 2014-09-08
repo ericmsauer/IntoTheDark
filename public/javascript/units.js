@@ -51,23 +51,33 @@ function unit_1(startx, starty){
 	this.walk_anim_direction = 1;
 
 	this.determine_actions = function(){
-		this.action = [0,0,0,0,0,0,0,0];
+		/*this.action = [0,0,0,0,0,0,0,0];
 		if(this.see_player){
 			var distance = Math.sqrt(game.player.positionY - this.positionY, game.player.positionX - this.positionX);
 
-			if(player.game.positionX > this.positionX)
+			if(player.game.positionX > this.positionX){
 				this.action[1] = true;
-			else
+				this.action[0] = false;
+			}
+			else{
+				this.action[1] = false;
 				this.action[0] = true;
-			if(player.game.positionY > this.positionY)
+			}
+			if(player.game.positionY > this.positionY){
 				this.action[2] = true;
-			else
+				this.action[3] = false;
+			}
+			else{
+				this.action[2] = false;
 				this.action[3] = true;
+			}
 			if(this.left_hand)
 				this.action[6] = true;
-			if((distance < 10) && !this.action[6])
+			if((distance < 10) && !this.action[6] && !this.action[7])
 				this.action[7] = true;
-		}
+			else
+				this.action[7] = false;
+		}*/
 	}
 
 	this.update = function(){
