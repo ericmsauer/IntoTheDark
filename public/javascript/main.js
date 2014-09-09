@@ -230,9 +230,9 @@ function Game(){
 		this.collision_walls[1][3] = this.load_walls(level_1_3);
 
 		//Tips
-		this.game_tips[0] = paper.text(320,240,"W,A,S,D to move\n \nHold space to\nsprint").scale(2,2);
+		this.game_tips[0] = paper.text(320,220,"W,A,S,D to move\n \nHold space to\nsprint\n \nShift to block\n \nRight click to attack").scale(2,2);
 		this.game_tips[0].attr({"font-family": "WC", fill:"white",opacity:"1"});
-		this.game_tips[1] = paper.text(320,210,"Don't die,\nyou only have one life!").scale(2,2);
+		this.game_tips[1] = paper.text(320,200,"Find a sword and shield\n \nBut don't die,\nyou only have one life!").scale(2,2);
 		this.game_tips[1].attr({"font-family": "WC", fill:"white",opacity:"1"});
 		this.game_tips[2] = paper.text(320,329,"But not Yet...\n \nBeware of the dark").scale(2,2);
 		this.game_tips[2].attr({"font-family": "WC", fill:"white",opacity:"1"});

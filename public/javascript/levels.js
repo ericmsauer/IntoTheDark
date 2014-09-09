@@ -385,6 +385,7 @@ var level_1_3 = [
 	//Walls
 ];
 var level_1_3_units = [
+	{type:"unit_1",x:100,y:100}
 ];
 var level_1_3_triggers = [
 ];

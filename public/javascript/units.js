@@ -51,25 +51,40 @@ function unit_1(startx, starty){
 	this.walk_anim_direction = 1;
 
 	this.determine_actions = function(){
-		/*this.action = [0,0,0,0,0,0,0,0];
+		this.action = [0,0,0,0,0,0,0,0];
 		if(this.see_player){
-			var distance = Math.sqrt(game.player.positionY - this.positionY, game.player.positionX - this.positionX);
-
-			if(player.game.positionX > this.positionX){
-				this.action[1] = true;
+			var distance = Math.sqrt(Math.pow(game.player.positionY - this.positionY,2)+Math.pow(game.player.positionX - this.positionX,2));
+			if(distance > 30){
+				if(game.player.positionX > this.positionX - 3){
+					this.action[1] = true;
+					this.action[0] = false;
+				}
+				else if(game.player.positionX < this.positionX + 3){
+					this.action[1] = false;
+					this.action[0] = true;
+				}
+				else{
+					this.action[0] = false;
+					this.action[1] = false;
+				}
+				if(game.player.positionY > this.positionY - 3){
+					this.action[3] = true;
+					this.action[2] = false;
+				}
+				else if(game.player.positionY < this.positionY + 3){
+					this.action[3] = false;
+					this.action[2] = true;
+				}
+				else{
+					this.action[2] = false;
+					this.action[3] = false;
+				}
+			}
+			else{
 				this.action[0] = false;
-			}
-			else{
 				this.action[1] = false;
-				this.action[0] = true;
-			}
-			if(player.game.positionY > this.positionY){
-				this.action[2] = true;
-				this.action[3] = false;
-			}
-			else{
 				this.action[2] = false;
-				this.action[3] = true;
+				this.action[3] = false;
 			}
 			if(this.left_hand)
 				this.action[6] = true;
@@ -77,7 +92,7 @@ function unit_1(startx, starty){
 				this.action[7] = true;
 			else
 				this.action[7] = false;
-		}*/
+		}
 	}
 
 	this.update = function(){
@@ -313,6 +328,7 @@ function arrow_shooter(startx, starty, direction, attack_speed){
 	this.update = function(){
 		//Death
 		if(this.health <= 0 && !this.dead) {
+			this.canvas_element_body.hide();
 			this.canvas_element_body = paper.image(this.IMAGE_SRC_BODY_DEATH,this.positionX-this.RADIUS + 15,this.positionY - this.RADIUS - 20,20,20);
 			this.canvas_element_health.hide();
 			this.sound_death.play();
