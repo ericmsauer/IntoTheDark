@@ -25,8 +25,6 @@ var level_0_0 = [
 	{a:{x:200,y:480}, b:{x:200,y:460}}],
 ];
 var level_0_0_units = [
-	 {type:"unit_1",
-	 x: 300, y: 60},
 ];
 var level_0_0_triggers = [
 ];

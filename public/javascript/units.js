@@ -458,6 +458,7 @@ function spikes(startx, starty, length, height, IMAGE_SRC){
 	this.length = length;
 	this.height = height;
 	this.triggered = false;
+	this.dead = false;
 	//Canvas_elements
 	this.IMAGE_SRC_BODY = IMAGE_SRC;
 	this.canvas_element_body;
@@ -484,9 +485,10 @@ function spikes(startx, starty, length, height, IMAGE_SRC){
 
 	//Start a unit
 	this.start = function(){
-		if(this.triggered){
+		if(this.triggered && !this.dead){
 			this.canvas_element_body.show();
 			this.sound_death.play();
+			this.dead = true;
 		}
 	}
 
