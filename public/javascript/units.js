@@ -88,9 +88,10 @@ function unit_1(startx, starty){
 			}
 			if(this.left_hand)
 				this.action[6] = true;
-			if((distance < 10) && !this.action[6] && !this.action[7])
+			this.action[6] = false;
+			if((distance < 30) && !this.action[6] && !this.action[7])
 				this.action[7] = true;
-			else
+			else if(this.right_hand_anim == 40)
 				this.action[7] = false;
 		}
 	}
