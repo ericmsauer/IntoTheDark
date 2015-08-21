@@ -1,5 +1,5 @@
-README for Game
-----------------------------------
+This a small project that helped me understand game logic. Inspired by Dark Souls.
+
 Installation:
 - Install node.js 0.8 +
 - Install npm
@@ -9,9 +9,6 @@ Installation:
 Start Server:
 - node app.js
 - nodemon app.js
-
-
-This a small project that helped me understand game logic. Inspired by Dark Souls.
 
 TODO
 - Fixed AI
