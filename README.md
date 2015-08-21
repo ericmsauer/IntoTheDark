@@ -9,3 +9,10 @@ Installation:
 Start Server:
 - node app.js
 - nodemon app.js
+
+
+This a small project that helped me understand game logic. Inspired by Dark Souls.
+
+TODO
+- Fixed AI
+- Add more levels
